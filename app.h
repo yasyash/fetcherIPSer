@@ -18,31 +18,31 @@ public:
 protected:
     void timerEvent (QTimerEvent *ev)
     {
-        bool res;							// признак успешности установки сигналов-слотов
-        killTimer (ev->timerId ());			// остановка таймера
+        bool res;							// success ops flag
+        killTimer (ev->timerId ());			// stop timer
         res = QObject::connect (&_obj, SIGNAL (objectIsReady ()), this, SLOT (connectObject ()));
-        Q_ASSERT_X (res, "connect", "connection is not established");	// установка связей с объектом
+        Q_ASSERT_X (res, "connect", "connection is not established");	// connection with object
         const QStringList args =  QCoreApplication::arguments();
-        _obj.starting (SIGNAL (finished ()), SLOT (terminate ()),  QThread::HighPriority,  args);					// запуск потока с высоким приоритетом
+        _obj.starting (SIGNAL (finished ()), SLOT (terminate ()),  QThread::HighPriority,  args);					// starting of a thread with high priority
     }
 
 private slots:
-    void connectObject (void)		// установка связей с объектом
+    void connectObject (void)		// connection with object
     {
-        bool res;					// признак успешности установки сигналов-слотов
+        bool res;					// seccess ops flag
         res = QObject::connect (this, SIGNAL(finish()), _obj, SLOT(terminate()));
-        Q_ASSERT_X (res, "connect", "connection is not established");	// закрытие этого объекта з акрывает объект в потоке
+        Q_ASSERT_X (res, "connect", "connection is not established");	// closing this object is close oblect in thread
         res = QObject::connect (_obj, SIGNAL(finished()), this, SLOT(terminate()));
-        Q_ASSERT_X (res, "connect", "connection is not established");	// конец операции завершает работу приложения
+        Q_ASSERT_X (res, "connect", "connection is not established");	// ending of ops is terminate work of application
 
         emit(startAction());
 
     }
 public slots:
-    void terminate (void)			{ emit finish (); }		// завершение работы приложения
+    void terminate (void)			{ emit finish (); }		//terminate work of application
 
 signals:
-    void startAction (void);		// сигнал "запуск действия"
+    void startAction (void);		// signal start working
     void finish (void);
 
 };

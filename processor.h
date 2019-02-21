@@ -34,12 +34,12 @@ public:
 
 signals:
     void AsciiPortActive(bool active);
-    void finished ();						// сигнал "остановка работы"
+    void finished ();						// signal finished
 
 public slots:
-    void terminate ()			// досрочная остановка
+    void terminate ()			//termination
     {
-        emit finished ();			// сигнал завергения работы
+        emit finished ();
     }
 
 private slots:
