@@ -3,6 +3,9 @@
 
 #include "app.h"
 
+//Use next command line perameters
+//-slaveid 1 3 11 16 -port /dev/ttyr00 -baud 9600 -data 8 -stop 1 -parity none -db database -user username -pwd password -dustip 192.168.1.150 -dustport 3602 -alarmip 192.168.1.110 -alarmport 5555 -upsport 3493 -polltime 20
+//Also you would to use verbose mode with '-verbose' option
 
 _App * globalApp = NULL;
 

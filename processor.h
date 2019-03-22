@@ -13,6 +13,8 @@
 #include "modbus-private.h"
 #include "ups_status.h"
 #include "tcpsock.h"
+#include "dusttcpsock.h"
+
 
 class processor : public QObject
 {
@@ -83,8 +85,9 @@ private:
 
     bool verbose; //verbose mode flag
 
-    ups_status *m_ups;
-    TcpSock    *m_fire;
+    ups_status *m_ups;   //member for UPS status
+    TcpSock    *m_fire; //member for Fire alarm status
+    DustTcpSock    *m_dust; //member for Dust Measure
 
 };
 

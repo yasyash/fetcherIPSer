@@ -231,7 +231,26 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
 
     }
 
+// Dust equpment init
 
+    QString dustip = cmdline_args.value(cmdline_args.indexOf("-dustip") +1);
+    if (dustip == "")
+    {
+        qDebug ( "IP address of dust measure equipment is not set.");
+    }
+    else
+    {
+        quint16 dustport = cmdline_args.value(cmdline_args.indexOf("-dustport") +1).toUShort();
+        if (dustport <= 0)
+        {
+            qDebug ( "Port of dust measure equipment is not set.");
+        }
+        else
+        {
+            m_dust = new DustTcpSock(this, &dustip, &dustport);
+        }
+
+    }
 
 
     m_renovateTimer->start(420000); // every 7 minutes we set all slave ID to active mode for polling despite of really state

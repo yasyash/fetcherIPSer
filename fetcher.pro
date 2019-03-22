@@ -27,7 +27,8 @@ SOURCES += \
         ups_status.cpp\
         nutclient.cpp\
         tcpsock.cpp\
-        surgard.cpp
+        surgard.cpp\
+        dusttcpsock.cpp
 
 HEADERS +=\
     3rdparty/qextserialport/qextserialport.h \
@@ -39,8 +40,8 @@ HEADERS +=\
     ups_status.h\
     nutclient.h\
     tcpsock.h\
-    surgard.h
-
+    surgard.h\
+    dusttcpsock.h
 
 INCLUDEPATH += 3rdparty/libmodbus \
                3rdparty/libmodbus/src \
