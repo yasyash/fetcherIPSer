@@ -42,7 +42,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     {
         m_ups = new ups_status(&ups_port);
         qDebug() << "UPS model: "<< QString::fromStdString(m_ups->m_model->getValue().data()[0]) <<"\n Voltage: "
-                 << QString::fromStdString(m_ups->m_voltage->getValue().data()[0]);
+                                                                                                << QString::fromStdString(m_ups->m_voltage->getValue().data()[0]);
     }
 
     QString port = cmdline_args.value(cmdline_args.indexOf("-port") +1);
@@ -160,6 +160,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
 
     m_pollTimer = new QTimer( this );
     connect( m_pollTimer, SIGNAL(timeout()), this, SLOT(sendModbusRequest()));
+    connect( m_pollTimer, SIGNAL(timeout()), this, SLOT(readSocketStatus()));
 
     //  m_statusTimer = new QTimer( this );
     //connect( m_statusTimer, SIGNAL(timeout()), this, SLOT(resetStatus()));
@@ -231,7 +232,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
 
     }
 
-// Dust equpment init
+    // Dust equpment init
 
     QString dustip = cmdline_args.value(cmdline_args.indexOf("-dustip") +1);
     if (dustip == "")
@@ -248,6 +249,12 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
         else
         {
             m_dust = new DustTcpSock(this, &dustip, &dustport);
+            m_dust->sendData( "RDMN");
+            // while (!m_dust->is_read);
+            m_dust->is_read = false;
+            m_dust->sendData( "MSTART");
+            //while (!m_dust->is_read);
+            m_dust->is_read = false;
         }
 
     }
@@ -281,6 +288,8 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
 
 processor::~processor()
 {
+    m_dust->sendData( "MSTOP");
+
     modbus_close( m_serialModbus );
     modbus_free( m_serialModbus );
     m_serialModbus = NULL;
@@ -724,25 +733,55 @@ void processor::renovateSlaveID( void )
     memset(q_poll, 24, 16);
     for( int j = 0; j < slaveID->size(); ++j )
     {
-        //ui->slaveID->item(j)->setCheckState(Qt::Checked);
         slaveID->replace(j, true);
     }
-    // ui->slaveID->setEnabled(true);
+
+    m_dust->sendData( "MSTART"); //restart Dust measure equipment
+
+
 
 }
 
 void processor::transactionDB(void)
 {
     QMap<QString, QUuid>::iterator sensor;
+    int val;
+    float average;
+
     for (sensor = m_uuid->begin(); sensor != m_uuid->end(); ++sensor)
     {
-        int val = m_data->value(sensor.key(), -1);
+        if (sensor.key() == "Пыль общая")
+        {
+            val = m_data->value("PM", -1); //Hardcoded for Cyrillic name of Dust total
+
+        } else {
+
+            val = m_data->value(sensor.key(), -1);
+        }
+
+
         if (val != -1){
             QSqlQuery query = QSqlQuery(*m_conn);
             query.prepare("INSERT INTO sensors_data (idd, serialnum, date_time, typemeasure, measure, is_alert) "
                           "VALUES (:idd, :serialnum, :date_time, :typemeasure, :measure, false)");
 
-            float average = (float (val)) / m_measure->value(sensor.key(), 1) / 10;
+            if ((sensor.key().indexOf("PM")!= -1) || (sensor.key().indexOf("Пыль общая")!= -1))
+            {
+                average = (float (val)) / m_measure->value(sensor.key(), 1) / 1000; //for dust measure range is less
+                if (sensor.key() == "Пыль общая")
+                {
+                    average = (float (val)) / m_measure->value("PM", 1) / 1000; //Hardcoded for Cyrillic name of Dust total
+
+                } else {
+
+                    average = (float (val)) / m_measure->value(sensor.key(), 1) / 1000; //for dust measure range is less
+                }
+
+            }
+            else
+            {
+                average = (float (val)) / m_measure->value(sensor.key(), 1) / 10;
+            }
 
             query.bindValue(":idd", QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")));
             query.bindValue(":serialnum",  QString(m_uuid->value(sensor.key()).toString()).remove(QRegExp("[\\{\\}]")));
@@ -770,11 +809,11 @@ void processor::transactionDB(void)
                 {
                     if (query.exec())
                     {
-                        qDebug() << "Insertion successful!";
+                        qDebug() << "Insertion is successful!";
                     }
                     else
                     {
-                        qDebug() << "Insertion not successful!";
+                        qDebug() << "Insertion is not successful!";
 
                     }
                 }
@@ -790,6 +829,10 @@ void processor::transactionDB(void)
 
 
     }
+
+    m_data->clear();
+    m_measure->clear();
+
 }
 void processor::startTransactTimer( QSqlDatabase *conn) //start by signal dbForm
 {
@@ -817,4 +860,49 @@ void processor::startTransactTimer( QSqlDatabase *conn) //start by signal dbForm
     query->finish();
     //    query->~QSqlQuery();
 
+}
+
+void processor::readSocketStatus()
+{
+    QString tmp_type_measure;
+    QStringList dust = {"PM1", "PM2.5", "PM4", "PM10", "PM"  };
+    int tmp;
+    //m_dust->sendData( "MSTOP\r", 6);
+
+    m_dust->sendData( "MSTATUS");
+    //while (!m_dust->is_read);
+    m_dust->is_read = false;
+
+    if (m_dust->status == "Running"){
+
+        m_dust->sendData( "RMMEAS");
+        //while (!m_dust->is_read);
+        m_dust->is_read = false;
+        qDebug() << "count " << dust.length();
+
+        for (int i = 0; i < dust.length(); i++)
+        {
+            tmp_type_measure = dust[i];
+            tmp = m_data->value(tmp_type_measure, -1); //detect first measure
+
+            if ( tmp == -1)
+            {
+                if (m_dust->measure->value(tmp_type_measure) >0)
+                {
+                    m_data->insert(tmp_type_measure, m_dust->measure->value(tmp_type_measure)); // insert into QMap ordering pair of measure first time
+                    m_measure->insert(tmp_type_measure, 1);
+                    qDebug() << "measure... " << tmp_type_measure << " value = " << (float)m_dust->measure->value(tmp_type_measure)/1000;
+                }
+            } else {
+                if (m_dust->measure->value(tmp_type_measure) >0)
+                {
+                    m_data->insert(tmp_type_measure, tmp + m_dust->measure->value(tmp_type_measure));
+                    m_measure->insert(tmp_type_measure, m_measure->value(tmp_type_measure, 0) +1); //increment counter
+                    qDebug() << "measure... " << tmp_type_measure << " value = " << (float)m_dust->measure->value(tmp_type_measure)/1000;
+                }
+            }
+        }
+    }
+
+    m_dust->measure->clear();
 }

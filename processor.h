@@ -56,6 +56,7 @@ private slots:
     void renovateSlaveID( void );
     void startTransactTimer(QSqlDatabase *conn); //start by signal dbForm
     void transactionDB   (void);   //transaction timer event
+    void readSocketStatus(void);
 
 private:
 

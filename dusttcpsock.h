@@ -11,7 +11,8 @@ Q_OBJECT
 public:
     DustTcpSock(QObject *parent, QString *ip, quint16 *port);
     virtual ~DustTcpSock();
-    // IModbus interface
+
+    void sendData(char *data);
 
 
 protected:
@@ -21,6 +22,7 @@ private slots:
     void on_cbEnabled_clicked(bool checked);
     void readData();
     void displayError(QAbstractSocket::SocketError socketError);
+    void writes();
 
 signals:
     void tcpPortActive(bool val);
@@ -32,6 +34,16 @@ private:
     quint32 blockSize;
     QString *m_ip;
     int     *m_port;
+
+public:
+    //enum _status {Idle, Waiting, Running};
+    enum _command {RDMN, MSTATUS, MSTART, MSTOP, RMMEAS};
+    QString model;
+    QString status;
+    bool is_read;
+    uint sample_t;
+    QMap<QString, int> *measure;
+    enum _command last_command;
 
    // QDataStream *in_stream;
 };
