@@ -869,11 +869,11 @@ void processor::readSocketStatus()
     int tmp;
     //m_dust->sendData( "MSTOP\r", 6);
 
-    m_dust->sendData( "MSTATUS");
+    //m_dust->sendData( "MSTATUS");
     //while (!m_dust->is_read);
-    m_dust->is_read = false;
+    //m_dust->is_read = false;
 
-    if (m_dust->status == "Running"){
+    //if (m_dust->status == "Running"){
 
         m_dust->sendData( "RMMEAS");
         //while (!m_dust->is_read);
@@ -902,7 +902,7 @@ void processor::readSocketStatus()
                 }
             }
         }
-    }
+   // }
 
     m_dust->measure->clear();
 }

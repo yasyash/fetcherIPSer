@@ -43,6 +43,7 @@ HEADERS +=\
     surgard.h\
     dusttcpsock.h
 
+
 INCLUDEPATH += 3rdparty/libmodbus \
                3rdparty/libmodbus/src \
                3rdparty/qextserialport \
@@ -63,3 +64,6 @@ win32 {
 include(deployment.pri)
 
 DEFINES += WITH_PURE_VIRTUAL
+DEFINES += DUSTTCP_H
+#DEFINES += DUSTUDP_H
+

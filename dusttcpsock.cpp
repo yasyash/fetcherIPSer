@@ -2,12 +2,49 @@
 
 #include <QDebug>
 
+#ifdef DUSTTCP_H
 DustTcpSock::DustTcpSock(QObject *parent , QString *ip, quint16 *port) : QObject (parent)
 
 {
 
 
     m_sock = new QTcpSocket(this);
+
+    connect(m_sock, SIGNAL(readyRead()), this, SLOT(readData()));
+    connect(m_sock, SIGNAL(bytesWritten(qint64)), this, SLOT(writes()));
+
+    connect(m_sock, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(displayError(QAbstractSocket::SocketError)));
+    //connect(this, SIGNAL(dataReady(QByteArray&)), this, SLOT(setData(QByteArray&)) );
+
+    changeInterface(*ip, *port);
+    m_sock->setSocketOption(QAbstractSocket::LowDelayOption, 0);
+     //qDebug() << "Socket " << m_sock->socketOption(QAbstractSocket::SendBufferSizeSocketOption);
+   // m_sock->setSocketOption(QAbstractSocket::SendBufferSizeSocketOption, 1024);
+   // qDebug() << "Socket next " << m_sock->socketOption(QAbstractSocket::SendBufferSizeSocketOption);
+
+    m_sock->setSocketOption(QAbstractSocket::TypeOfServiceOption, 64);
+
+    measure = new  QMap<QString, int>;
+    measure->insert("PM1", 0);
+    measure->insert("PM2.5", 0);
+    measure->insert("PM4", 0);
+    measure->insert("PM10", 0);
+    measure->insert("PM", 0);
+
+    is_read = false;
+    status = "";
+    qDebug() << "Dust measure equipment handling has been initialized.";
+
+}
+#endif
+
+#ifdef DUSTUDP_H
+DustTcpSock::DustTcpSock(QObject *parent , QString *ip, quint16 *port) : QObject (parent)
+
+{
+
+
+    m_sock = new QUdpSocket(this);
 
     connect(m_sock, SIGNAL(readyRead()), this, SLOT(readData()));
     connect(m_sock, SIGNAL(bytesWritten(qint64)), this, SLOT(writes()));
@@ -30,6 +67,7 @@ DustTcpSock::DustTcpSock(QObject *parent , QString *ip, quint16 *port) : QObject
     qDebug() << "Dust measure equipment handling has been initialized.";
 
 }
+#endif
 
 DustTcpSock::~DustTcpSock()
 {

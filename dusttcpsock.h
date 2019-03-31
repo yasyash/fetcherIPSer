@@ -1,12 +1,14 @@
 #ifndef DUSTTCPSOCK_H
 #define DUSTTCPSOCK_H
 
+
+#include <QUdpSocket>
 #include <QTcpSocket>
 
 
 class DustTcpSock : public QObject
 {
-Q_OBJECT
+    Q_OBJECT
 
 public:
     DustTcpSock(QObject *parent, QString *ip, quint16 *port);
@@ -30,7 +32,15 @@ signals:
     void dataReady(QByteArray &str);
 
 private:
+
+#ifdef DUSTTCP_H
     QTcpSocket *m_sock;
+#endif
+
+#ifdef DUSTUDP_H
+    QUdpSocket *m_sock;
+#endif
+
     quint32 blockSize;
     QString *m_ip;
     int     *m_port;
@@ -45,7 +55,7 @@ public:
     QMap<QString, int> *measure;
     enum _command last_command;
 
-   // QDataStream *in_stream;
+    // QDataStream *in_stream;
 };
 
 #endif // DUSTTCPSOCK_H
