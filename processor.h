@@ -16,6 +16,7 @@
 #include "dusttcpsock.h"
 
 
+
 class processor : public QObject
 {
     Q_OBJECT
@@ -69,8 +70,10 @@ private:
     QTimer * m_transactTimer; //timer for trunsaction
     QMap<QString, int>   * m_data; //assosiative array of polling data
     QMap<QString, int>   * m_measure; //assosiative array of measurement quantities
+    QMap<QString, int>   * m_range; //assosiative array of measurement equipments range
     QMap<QString, QUuid>   * m_uuid; //assosiative array of sensors uuid
-    QList<int> *m_pool;
+    //QList<int> *m_pool;
+    QMap<int, int> *m_pool; //assosiative array of polling slave address - number of registers
 
     bool m_tcpActive;
     bool m_poll;
@@ -89,6 +92,8 @@ private:
     ups_status *m_ups;   //member for UPS status
     TcpSock    *m_fire; //member for Fire alarm status
     DustTcpSock    *m_dust; //member for Dust Measure
+    QString m_dust_ip;
+    quint16 m_dust_port;
 
 };
 

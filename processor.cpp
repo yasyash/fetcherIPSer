@@ -20,7 +20,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     m_poll(false), // not working initial state
     funcModbus(0x03),
     addrModbus(0),
-    numCoils(3),
+    numCoils(6),
     verbose(false)
 
 {
@@ -156,7 +156,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
 
     QTimer * t = new QTimer( this );
     connect( t, SIGNAL(timeout()), this, SLOT(pollForDataOnBus()));
-    t->start( 5 );
+    t->start( 500 );
 
     m_pollTimer = new QTimer( this );
     connect( m_pollTimer, SIGNAL(timeout()), this, SLOT(sendModbusRequest()));
@@ -176,7 +176,8 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     //m_mutex = new QMutex();
     //int _pos = cmdline_args.indexOf("-slaveid");
     QStringListIterator iterator(cmdline_args);
-    m_pool = new QList<int>;
+    //mm_pool = new QList<int>;
+    m_pool = new QMap<int, int>;
 
     while (iterator.hasNext())
     {
@@ -185,7 +186,9 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
             QString tmp = iterator.next().toLocal8Bit().constData();
             while (tmp.indexOf("-") == -1) {
 
-                m_pool->push_back(tmp.toInt());
+                //m_pool->push_back(tmp.toInt());
+                m_pool->insert(tmp.toInt(), numCoils);
+
                 tmp = iterator.next().toLocal8Bit().constData();
             }
             // return;
@@ -196,7 +199,8 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     {
         for ( int i = 0; i < 16; i++)
         {
-            m_pool->push_back(i);
+            //m_pool->push_back(i);
+            m_pool->insert(i, numCoils);
 
         }
     }
@@ -234,21 +238,21 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
 
     // Dust equpment init
 
-    QString dustip = cmdline_args.value(cmdline_args.indexOf("-dustip") +1);
-    if (dustip == "")
+     m_dust_ip = cmdline_args.value(cmdline_args.indexOf("-dustip") +1);
+    if (m_dust_ip == "")
     {
         qDebug ( "IP address of dust measure equipment is not set.");
     }
     else
     {
-        quint16 dustport = cmdline_args.value(cmdline_args.indexOf("-dustport") +1).toUShort();
-        if (dustport <= 0)
+         m_dust_port = cmdline_args.value(cmdline_args.indexOf("-dustport") +1).toUShort();
+        if (m_dust_port <= 0)
         {
             qDebug ( "Port of dust measure equipment is not set.");
         }
         else
         {
-            m_dust = new DustTcpSock(this, &dustip, &dustport);
+            m_dust = new DustTcpSock(this, &m_dust_ip, &m_dust_port);
             m_dust->sendData( "RDMN");
             // while (!m_dust->is_read);
             m_dust->is_read = false;
@@ -281,6 +285,25 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     startTransactTimer(m_conn);    //start transaction timer - must be after polling timer!!!
 
     resetStatus();
+
+    //range coefficients
+    m_range = new QMap<QString, int>;
+    m_range->insert("CO", 10);
+    m_range->insert("NO2", 1000);
+    m_range->insert("NO", 1000);
+    m_range->insert("SO2", 1000);
+    m_range->insert("H2S", 10000);
+    m_range->insert("Пыль общая", 1000);
+    m_range->insert("PM", 1000);
+    m_range->insert("PM1", 1000);
+    m_range->insert("PM2.5", 1000);
+    m_range->insert("PM4", 1000);
+    m_range->insert("PM10", 1000);
+    m_range->insert("Ресурс сенс. NO", 1);
+    m_range->insert("Ресурс сенс. H2S", 1);
+
+
+
 
 
 }
@@ -382,7 +405,8 @@ void processor::sendModbusRequest( void )
 {
 
     QString tmp_type_measure;
-
+    int j = 0;
+    QMap<int, int>::iterator slave;
     //if( m_tcpActive )
     //  ui->tcpSettingsWidget->tcpConnect();
 
@@ -391,11 +415,12 @@ void processor::sendModbusRequest( void )
         qDebug() << "Modbus is not configured!\n" ;
         return;
     }
-    for( int j = 0; j < m_pool->size() ; j++ )
+    //for( int j = 0; j < m_pool->size() ; j++ )
+    for (slave = m_pool->begin(); slave != m_pool->end(); ++slave)
     {
         tmp_type_measure.clear(); //It's reset when new Slave ID is viewed
 
-        if (slaveID->value(m_pool->value(j)-1))
+        if (slaveID->value(slave.key() - 1))
         {
             //QString slave = QString(j);
             const int func = funcModbus;
@@ -411,26 +436,28 @@ void processor::sendModbusRequest( void )
             bool writeAccess = false;
             const QString dataType = descriptiveDataTypeName( func );
 
-            modbus_set_slave( m_modbus, m_pool->value(j) );
+            //modbus_set_slave( m_modbus, m_pool->value(j) );
+            modbus_set_slave( m_modbus, slave.key() );
 
             switch( func )
             {
             case MODBUS_FC_READ_COILS:
-                ret = modbus_read_bits( m_modbus, addr, num, dest );
+                ret = modbus_read_bits( m_modbus, addr, slave.value(), dest );
                 break;
             case MODBUS_FC_READ_DISCRETE_INPUTS:
-                ret = modbus_read_input_bits( m_modbus, addr, num, dest );
+                ret = modbus_read_input_bits( m_modbus, addr, slave.value(), dest );
                 break;
             case MODBUS_FC_READ_HOLDING_REGISTERS:
                 //while(!m_mutex->tryLock());{
 
                 // qDebug() << "ret... " << ret << " \n";
-                ret = modbus_read_registers( m_modbus, addr, num, dest16 );
+                //ret = modbus_read_registers( m_modbus, addr, num, dest16 );
+                ret = modbus_read_registers( m_modbus, addr, slave.value(), dest16 );
                 is16Bit = true;
                 // m_mutex->unlock();
                 break;
             case MODBUS_FC_READ_INPUT_REGISTERS:
-                ret = modbus_read_input_registers( m_modbus, addr, num, dest16 );
+                ret = modbus_read_input_registers( m_modbus, addr, slave.value(), dest16 );
                 is16Bit = true;
                 break;
             case MODBUS_FC_WRITE_SINGLE_COIL:
@@ -479,7 +506,7 @@ void processor::sendModbusRequest( void )
                 break;
             }
 
-            if( ret == num  )
+            if( ret == slave.value()  )
             {
                 if( writeAccess )
                 {
@@ -488,16 +515,17 @@ void processor::sendModbusRequest( void )
                 }
                 else
                 {
-                    bool b_hex = is16Bit && true;//ui->checkBoxHexData->checkState() == Qt::Checked;
+                    // RESULT PARSING
+
+                    bool b_hex = is16Bit && true;
                     QString qs_num;
 
-                    //ui->regTable->setRowCount( num );
-                    for( int i = 0; i < num; ++i )
+                    for( int i = 0; i < slave.value(); ++i )
                     {
                         int data = is16Bit ? dest16[i] : dest[i];
 
 
-                        q_poll[m_pool->value(j)-1] = 24; //reset of fault polling <i> counter
+                        q_poll[slave.key() - 1] = 24; //reset of fault polling <i> counter
 
                         switch( i ) //register value explanation
                         {
@@ -506,11 +534,66 @@ void processor::sendModbusRequest( void )
                             QTextStream(&result) << data;
                             qDebug() << QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss ")  << "\nSlave address = " << result;
 
-                            //ui->regTable->setItem( i, 3, new QTableWidgetItem("Slave modbus addr. ") );
-                            //ui->regTable->setItem( i, 4, new QTableWidgetItem(result) );
                         }
                             break;
                         case 1:
+                        {
+                            uint8_t _mode = data & 0xFF;
+                            QString md, name, result;
+
+
+
+                            uint8_t _type = (data >> 8) & 0xF;
+
+                            if (_type == 2){ name = "CO"; //detect type of sensor HARDCODED
+                                if (_mode == 2) md = "fault";
+                                else
+                                {md = (_mode ?  "off" :  "measuring");};
+                            }
+                            if (_type == 4){ name = "NO2"; //detect type of sensor HARDCODED
+                                if (_mode == 7) md = "change sensor";
+                                else
+                                {md = (_mode ?  "off" :  "measuring");};
+                            }
+
+                            if (_type == 6){ name = "SO2"; //detect type of sensor HARDCODED
+                                if (_mode == 7) md = "change sensor";
+                                else
+                                {md = (_mode ?  "off" :  "measuring");};
+                            }
+
+
+                            tmp_type_measure = name;
+
+                            uint8_t _number = (data >> 12) & 0xF;
+                            QTextStream(&result) << name << " : " << md << " : " << _number;
+                            qDebug() << result;
+
+                            break;
+                        }
+                        case 2:{
+                            QString result;
+                            int tmp, cnt;
+
+                            QTextStream(&result) << float (data)/m_range->value(tmp_type_measure) << " mg/m3";
+
+
+                            tmp = m_data->value(tmp_type_measure, -1); //detect first measure
+                            if ( tmp == -1){
+                                m_data->insert(tmp_type_measure, QString::number(data, 16).toInt()); // insert into QMap ordering pair of measure first time
+                                m_measure->insert(tmp_type_measure, 1);
+                                qDebug() << "measure... \n type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt()/m_range->value(tmp_type_measure);
+
+                            } else {
+                                m_data->insert(tmp_type_measure, tmp + QString::number(data, 16).toInt() );
+                                cnt = m_measure->value(tmp_type_measure, 0);
+                                m_measure->insert(tmp_type_measure, cnt+1);
+                                qDebug()<<  "measure... \n type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt()/m_range->value(tmp_type_measure);
+
+                            }
+                            break;
+                        }
+                        case 3:
                         {
                             uint8_t _mode = data & 0xFF;
                             QString md, name, result;
@@ -521,7 +604,18 @@ void processor::sendModbusRequest( void )
 
                             uint8_t _type = (data >> 8) & 0xF;
 
-                            if (_type == 2) name = "CO"; //detect type of sensor
+                            if (_type == 7){ name = "NO"; //detect type of sensor HARDCODED
+                                if (_mode == 7) md = "change sensor";
+                                else
+                                {md = (_mode ?  "off" :  "measuring");};
+                            }
+
+                            if (_type == 3){ name = "H2S"; //detect type of sensor HARDCODED
+                                if (_mode == 7) md = "change sensor";
+                                else
+                                {md = (_mode ?  "off" :  "measuring");};
+                            }
+
 
                             tmp_type_measure = name;
 
@@ -529,35 +623,58 @@ void processor::sendModbusRequest( void )
                             QTextStream(&result) << name << " : " << md << " : " << _number;
                             qDebug() << result;
 
-                            // ui->regTable->setItem( i, 3, new QTableWidgetItem("Type : Mode : Sensor №") );
-                            //ui->regTable->setItem( i, 4, new QTableWidgetItem(result));
 
                             break;
                         }
-                        case 2:{
+                        case 4:{
                             QString result;
                             int tmp, cnt;
 
-                            QTextStream(&result) << float (data)/10 << " mg/m3";
-                            // ui->regTable->setItem( i, 3, new QTableWidgetItem("Consentration") );
-                            //ui->regTable->setItem( i, 4, new QTableWidgetItem(result) );
+                            QTextStream(&result) << float (data)/m_range->value(tmp_type_measure) << " mg/m3";
 
 
                             tmp = m_data->value(tmp_type_measure, -1); //detect first measure
                             if ( tmp == -1){
                                 m_data->insert(tmp_type_measure, QString::number(data, 16).toInt()); // insert into QMap ordering pair of measure first time
                                 m_measure->insert(tmp_type_measure, 1);
-                                qDebug() << "measure... \n type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt()/10;
+                                qDebug() << "measure... \n type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt()/m_range->value(tmp_type_measure);
 
                             } else {
                                 m_data->insert(tmp_type_measure, tmp + QString::number(data, 16).toInt() );
                                 cnt = m_measure->value(tmp_type_measure, 0);
                                 m_measure->insert(tmp_type_measure, cnt+1);
-                                qDebug()<<  "measure... \n type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt()/10;
+                                qDebug()<<  "measure... \n type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt()/m_range->value(tmp_type_measure);
 
                             }
-                        }
                             break;
+                        }
+
+                        case 5:{
+                            QString result, str;
+                            int tmp, cnt;
+
+                            QTextStream(&result) << float (data) << " %";
+
+
+
+                            str = "Ресурс сенс. " % tmp_type_measure;
+                            tmp = m_data->value(str, -1); //detect first measure
+
+                            if ( tmp == -1){
+
+                                m_data->insert(str, QString::number(data, 16).toInt()); // insert into QMap ordering pair of measure first time
+                                m_measure->insert(str, 1);
+                                qDebug() << "measure... \n type= " << str << " value = " << (float)QString::number(data, 16).toInt() << " %";
+
+                            } else {
+                                m_data->insert(str, tmp + QString::number(data, 16).toInt());
+                                cnt = m_measure->value(str, 0);
+                                m_measure->insert(str, cnt+1);
+                                qDebug()<<  "measure... \n type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt() << " %";
+
+                            }
+                            break;
+                        }
                         default:
                             break;
                         }
@@ -580,12 +697,11 @@ void processor::sendModbusRequest( void )
                         err += tr( "I/O error" );
                         err += ": ";
                         err += tr( "did not receive any data from slave." );
-                        q_poll[m_pool->value(j)-1] --;
-                        if (q_poll[m_pool->value(j)-1]==0)
+                        q_poll[slave.key() - 1] --;
+                        if (q_poll[slave.key() - 1]==0)
                         {
-                            //  ui->slaveID->item(j)->setCheckState(Qt::Unchecked);
-                            //  ui->slaveID->setEnabled(false);
-                            slaveID->replace(m_pool->value(j)-1, false);
+
+                            slaveID->replace(slave.key() - 1, false);
                         }
                     }
                     else
@@ -595,13 +711,13 @@ void processor::sendModbusRequest( void )
                         err += tr( "Slave threw exception '" );
                         err += modbus_strerror( errno );
                         err += tr( "' or function not implemented." );
-                        q_poll[m_pool->value(j)-1] --;
-                        if (q_poll[m_pool->value(j)-1]==0)
-                        {
-                            //ui->slaveID->item(j)->setCheckState(Qt::Unchecked);
-                            //ui->slaveID->setEnabled(false);
-                            slaveID->replace(m_pool->value(j)-1, false);
 
+                        if (errno == EMBXILADD)  slave.value()--; //in case the number registers is too much
+                        q_poll[slave.key() - 1] --;
+                        if (q_poll[slave.key() - 1]==0)
+                        {
+
+                            slaveID->replace(slave.key() - 1, false);
                         }
                     }
                 }
@@ -615,15 +731,18 @@ void processor::sendModbusRequest( void )
 
                 if(( err.size() > 0 ) )
                     if (verbose){
-                        qDebug()<< QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss ") <<"Slave ID = " << m_pool->value(j) << "\n"<< err;
+                        qDebug()<< QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss ") <<"Slave ID = " << slave.key() << "\n"<< err;
                     }
                     else
                     {
-                        qDebug() << QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss ") <<"Slave ID = " << m_pool->value(j) <<" is not detected.";
+                        qDebug() << QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss ") <<"Slave ID = " << slave.key() <<" is not detected.";
                     }
             }
         }
+        j++;
     }
+
+
     //m_mutex->unlock();
 }
 
@@ -672,9 +791,13 @@ void processor::busMonitorRawData( uint8_t * data, uint8_t dataLen, bool addNewl
         }
         if( addNewline )
         {
-            dump += "\n";
+            qDebug().noquote() << "Raw data:  " << dump << "\r\n";
+
+            //dump += "\n";
         }
-        qDebug() << "Raw data:  " << dump;
+        else {
+            qDebug() << "Raw data:  " << dump;
+        }
     }
 }
 
@@ -733,8 +856,14 @@ void processor::renovateSlaveID( void )
     memset(q_poll, 24, 16);
     for( int j = 0; j < slaveID->size(); ++j )
     {
-        slaveID->replace(j, true);
+        if (!slaveID->value(j))
+        {
+            slaveID->replace(j, true);
+            m_pool->insert (j+1, numCoils); //renovate of registers quantity
+        }
     }
+    m_dust->~DustTcpSock();
+    m_dust = new DustTcpSock(this, &m_dust_ip, &m_dust_port);
 
     m_dust->sendData( "MSTART"); //restart Dust measure equipment
 
@@ -767,10 +896,10 @@ void processor::transactionDB(void)
 
             if ((sensor.key().indexOf("PM")!= -1) || (sensor.key().indexOf("Пыль общая")!= -1))
             {
-                average = (float (val)) / m_measure->value(sensor.key(), 1) / 1000; //for dust measure range is less
+                average = (float (val)) / m_measure->value(sensor.key(), 1) / m_range->value(sensor.key()); //for dust measure range is less
                 if (sensor.key() == "Пыль общая")
                 {
-                    average = (float (val)) / m_measure->value("PM", 1) / 1000; //Hardcoded for Cyrillic name of Dust total
+                    average = (float (val)) / m_measure->value("PM", 1) /m_range->value(sensor.key()); //Hardcoded for Cyrillic name of Dust total
 
                 } else {
 
@@ -780,7 +909,7 @@ void processor::transactionDB(void)
             }
             else
             {
-                average = (float (val)) / m_measure->value(sensor.key(), 1) / 10;
+                average = (float (val)) / m_measure->value(sensor.key(), 1) /m_range->value(sensor.key());
             }
 
             query.bindValue(":idd", QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")));
@@ -875,34 +1004,34 @@ void processor::readSocketStatus()
 
     //if (m_dust->status == "Running"){
 
-        m_dust->sendData( "RMMEAS");
-        //while (!m_dust->is_read);
-        m_dust->is_read = false;
-        qDebug() << "count " << dust.length();
+    m_dust->sendData( "RMMEAS");
+    //while (!m_dust->is_read);
+    m_dust->is_read = false;
+    qDebug() << "count " << dust.length();
 
-        for (int i = 0; i < dust.length(); i++)
+    for (int i = 0; i < dust.length(); i++)
+    {
+        tmp_type_measure = dust[i];
+        tmp = m_data->value(tmp_type_measure, -1); //detect first measure
+
+        if ( tmp == -1)
         {
-            tmp_type_measure = dust[i];
-            tmp = m_data->value(tmp_type_measure, -1); //detect first measure
-
-            if ( tmp == -1)
+            if (m_dust->measure->value(tmp_type_measure) >0)
             {
-                if (m_dust->measure->value(tmp_type_measure) >0)
-                {
-                    m_data->insert(tmp_type_measure, m_dust->measure->value(tmp_type_measure)); // insert into QMap ordering pair of measure first time
-                    m_measure->insert(tmp_type_measure, 1);
-                    qDebug() << "measure... " << tmp_type_measure << " value = " << (float)m_dust->measure->value(tmp_type_measure)/1000;
-                }
-            } else {
-                if (m_dust->measure->value(tmp_type_measure) >0)
-                {
-                    m_data->insert(tmp_type_measure, tmp + m_dust->measure->value(tmp_type_measure));
-                    m_measure->insert(tmp_type_measure, m_measure->value(tmp_type_measure, 0) +1); //increment counter
-                    qDebug() << "measure... " << tmp_type_measure << " value = " << (float)m_dust->measure->value(tmp_type_measure)/1000;
-                }
+                m_data->insert(tmp_type_measure, m_dust->measure->value(tmp_type_measure)); // insert into QMap ordering pair of measure first time
+                m_measure->insert(tmp_type_measure, 1);
+                qDebug() << "measure... " << tmp_type_measure << " value = " << (float)m_dust->measure->value(tmp_type_measure)/m_range->value(tmp_type_measure);
+            }
+        } else {
+            if (m_dust->measure->value(tmp_type_measure) >0)
+            {
+                m_data->insert(tmp_type_measure, tmp + m_dust->measure->value(tmp_type_measure));
+                m_measure->insert(tmp_type_measure, m_measure->value(tmp_type_measure, 0) +1); //increment counter
+                qDebug() << "measure... " << tmp_type_measure << " value = " << (float)m_dust->measure->value(tmp_type_measure)/m_range->value(tmp_type_measure);
             }
         }
-   // }
+    }
+    // }
 
     m_dust->measure->clear();
 }
