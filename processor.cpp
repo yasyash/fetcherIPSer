@@ -876,6 +876,7 @@ void processor::transactionDB(void)
     QMap<QString, QUuid>::iterator sensor;
     int val;
     float average;
+    QString tmp_time = QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss"); //all SQL INSERT should be in same time
 
     for (sensor = m_uuid->begin(); sensor != m_uuid->end(); ++sensor)
     {
@@ -914,7 +915,7 @@ void processor::transactionDB(void)
 
             query.bindValue(":idd", QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")));
             query.bindValue(":serialnum",  QString(m_uuid->value(sensor.key()).toString()).remove(QRegExp("[\\{\\}]")));
-            query.bindValue(":date_time", QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss"));
+            query.bindValue(":date_time", tmp_time);
             query.bindValue(":typemeasure",sensor.key());
             query.bindValue(":measure", average );
             qDebug() << "Transaction prepare: \n idd === "<< QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")) << "\n serial === " <<  QString(m_uuid->value(sensor.key()).toString()).remove(QRegExp("[\\{\\}]")) <<
