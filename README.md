@@ -30,8 +30,7 @@ Requirements
 
 * Qt5.12
 * GCC
-
-
+* libsnmp-dev 5.7.3
 
 Building
 --------
