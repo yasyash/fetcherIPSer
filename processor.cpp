@@ -1,3 +1,23 @@
+/*
+ * Copyright © 2018-2019 Yaroslav Shkliar <mail@ilit.ru>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Research Laboratory of IT
+ * www.ilit.ru on e-mail: mail@ilit.ru
+ */
+
+// -slaveid 1 3 11 12 15 -port /dev/ttyr00 -baud 9600 -data 8 -stop 1 -parity none -db weather -user weather -pwd 31415 -dustip 192.168.1.3 -dustport 3602 -alarmip 192.168.1.110 -alarmport 5555 -upsip 192.168.1.120 -upsport 3493 -upsuser liebert -meteoip 192.168.1.200 -meteoport 22222 -polltime 10 -verbose
+
 #include "processor.h"
 #include "app.h"
 #include <QDebug>
@@ -33,16 +53,28 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
         verbose = true;
     }
 
-    int ups_port = cmdline_args.value(cmdline_args.indexOf("-upsport") +1).toInt();
-    if (ups_port < 0)
+    // UPS init
+    QString ups_ip = cmdline_args.value(cmdline_args.indexOf("-upsip") +1);
+    if (ups_ip == "")
     {
-        qDebug ("UPS port error:  expected parameter");
+        qDebug ( "IP address of UPS is not set.");
     }
     else
     {
-        m_ups = new ups_status(&ups_port);
-        qDebug() << "UPS model: "<< QString::fromStdString(m_ups->m_model->getValue().data()[0]) <<"\n Voltage: "
-                                                                                                << QString::fromStdString(m_ups->m_voltage->getValue().data()[0]);
+
+        quint16 ups_port = cmdline_args.value(cmdline_args.indexOf("-upsport") +1).toUShort();
+        if (ups_port <= 0)
+        {
+            qDebug ("UPS port error:  expected parameter");
+        }
+        else
+        {
+            QString ups_username = cmdline_args.value(cmdline_args.indexOf("-upsuser") +1);
+
+            m_ups = new ups_status(&ups_ip, &ups_port, &ups_username);
+            //qDebug() << "UPS model: "<< QString::fromStdString(m_ups->m_model->getValue().data()[0]) <<"\n Voltage: "
+            //<< QString::fromStdString(m_ups->m_voltage->getValue().data()[0]);
+        }
     }
 
     QString port = cmdline_args.value(cmdline_args.indexOf("-port") +1);
@@ -225,7 +257,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     else
     {
         quint16 alarmport = cmdline_args.value(cmdline_args.indexOf("-alarmport") +1).toUShort();
-        if (alarmip <= 0)
+        if (alarmport <= 0)
         {
             qDebug ( "Port of fire alarm is not set.");
         }
@@ -236,16 +268,16 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
 
     }
 
-    // Dust equpment init
+    // Dust equipment init
 
-     m_dust_ip = cmdline_args.value(cmdline_args.indexOf("-dustip") +1);
+    m_dust_ip = cmdline_args.value(cmdline_args.indexOf("-dustip") +1);
     if (m_dust_ip == "")
     {
         qDebug ( "IP address of dust measure equipment is not set.");
     }
     else
     {
-         m_dust_port = cmdline_args.value(cmdline_args.indexOf("-dustport") +1).toUShort();
+        m_dust_port = cmdline_args.value(cmdline_args.indexOf("-dustport") +1).toUShort();
         if (m_dust_port <= 0)
         {
             qDebug ( "Port of dust measure equipment is not set.");
@@ -262,6 +294,30 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
         }
 
     }
+
+    // Meteostation init
+    //  -meteoip 192.168.1.200 -meteoport 22222
+
+    m_meteo_ip = cmdline_args.value(cmdline_args.indexOf("-meteoip") +1);
+    if (m_meteo_ip == "")
+    {
+        qDebug ( "IP address of meteostation is not set.");
+    }
+    else
+    {
+        m_meteo_port = cmdline_args.value(cmdline_args.indexOf("-meteoport") +1).toUShort();
+        if (m_meteo_port <= 0)
+        {
+            qDebug ( "Port of meteostation is not set.");
+        }
+        else
+        {
+            m_meteo = new MeteoTcpSock(this, &m_meteo_ip, &m_meteo_port);
+
+        }
+
+    }
+
 
 
     m_renovateTimer->start(420000); // every 7 minutes we set all slave ID to active mode for polling despite of really state
@@ -1005,6 +1061,7 @@ void processor::readSocketStatus()
 
     //if (m_dust->status == "Running"){
 
+    //Dust data reading
     m_dust->sendData( "RMMEAS");
     //while (!m_dust->is_read);
     m_dust->is_read = false;
@@ -1035,4 +1092,9 @@ void processor::readSocketStatus()
     // }
 
     m_dust->measure->clear();
+
+    //Meteostation data reading
+
+    m_meteo->sendData("LOOP 1");
+
 }

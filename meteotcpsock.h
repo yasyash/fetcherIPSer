@@ -16,21 +16,21 @@
  * www.ilit.ru on e-mail: mail@ilit.ru
  */
 
-#ifndef DUSTTCPSOCK_H
-#define DUSTTCPSOCK_H
+#ifndef METEOTCPSOCK_H
+#define METEOTCPSOCK_H
 
 
 #include <QUdpSocket>
 #include <QTcpSocket>
 
 
-class DustTcpSock : public QObject
+class MeteoTcpSock : public QObject
 {
     Q_OBJECT
 
 public:
-    DustTcpSock(QObject *parent, QString *ip, quint16 *port);
-    virtual ~DustTcpSock();
+    MeteoTcpSock(QObject *parent, QString *ip, quint16 *port);
+    virtual ~MeteoTcpSock();
 
     void sendData(char *data);
 
@@ -51,13 +51,10 @@ signals:
 
 private:
 
-#ifdef DUSTTCP_H
     QTcpSocket *m_sock;
-#endif
 
-#ifdef DUSTUDP_H
-    QUdpSocket *m_sock;
-#endif
+
+
 
     quint32 blockSize;
     QString *m_ip;
@@ -70,7 +67,7 @@ public:
     QString status;
     bool is_read;
     uint sample_t;
-    QMap<QString, int> *measure;
+    QMap<QString, float> *measure;
     enum _command last_command;
 
     // QDataStream *in_stream;
