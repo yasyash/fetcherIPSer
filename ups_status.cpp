@@ -19,6 +19,116 @@
 #include "ups_status.h"
 #include <QDebug>
 
+
+ups_status::ups_status( QString *ip, quint16 *port, QString *ups_username)
+{
+
+
+    /*
+     * Initialize the SNMP library
+     */
+
+    init_snmp("snmpapp");
+
+
+    /*
+     * Initialize a "session" that defines who we're going to talk to
+     */
+    addr = ip;
+    u_port = port;
+    user_name = ups_username;
+
+    snmp_sess_init( &session );                   /* set up defaults */
+    session.peername = strdup(ip->toLocal8Bit().data());
+
+
+    /* set the SNMP version number */
+    session.version = SNMP_VERSION_1;
+    const  char *community  = ups_username->toStdString().c_str();
+
+    session.community = (uchar*)community;
+    session.community_len = strlen((char*)session.community);
+    //session.rcvMsgMaxSize = MAX_NAME_LEN;
+
+    /*
+     * Open the session
+     */
+
+    ss = snmp_open(&session);                     /* establish the session */
+
+    if (!ss) {
+        //snmp_sess_perror("ack", &session);
+        //SOCK_CLEANUP;
+        //exit(1);
+        qDebug() << "Error opening SNMP library...";
+        return;
+    }
+
+    vars = get_data((char*)"SNMPv2-MIB::sysName.0");
+
+
+
+    if (status == STAT_SUCCESS && response->errstat == SNMP_ERR_NOERROR) {
+        print_variable(vars->name, vars->val_len, vars);
+        //qDebug() << "Error: \n" << snmp_errstring(response->errstat);
+
+
+    } else {
+        /*
+         * FAILURE: print what went wrong!
+         */
+
+        if (status == STAT_SUCCESS)
+            qDebug() << "Error in packet\n Reason: \n" << snmp_errstring(response->errstat);
+        else if (status == STAT_TIMEOUT)
+            qDebug() << "Timeout: No response from \n" <<      session.peername;
+        else
+            qDebug() << "Somethig error: " << ss;
+
+    }
+
+    //  if (response)
+    //     snmp_free_pdu(response);
+
+    vars = get_data((char*)"SNMPv2-MIB::sysLocation.0");
+    if (vars)
+        print_variable(vars->name, vars->val_len, vars);
+
+    vars = get_data((char*)"DISMAN-EVENT-MIB::sysUpTimeInstance");
+    if (vars)
+        print_variable(vars->name, vars->val_len, vars);
+
+    vars = get_data((char*)"SNMPv2-SMI::mib-2.33.1.3.3.1.3.1"); //Input voltage MIB
+    if (vars)
+        print_variable(vars->name, vars->val_len, vars);
+
+    if (response)
+        snmp_free_pdu(response);
+
+    sample_t = 0;
+    measure = new  QMap<QString, int>;
+
+    qDebug() << "UPS SNMP monitoring initialization complete.";
+}
+
+ups_status::~ups_status()
+{
+    snmp_close(ss);
+    //SOCK_CLEANUP;
+}
+
+
+void ups_status::read_voltage()
+{
+    vars = get_data((char*)"SNMPv2-SMI::mib-2.33.1.3.3.1.3.1"); //Input voltage MIB
+    if (vars)
+    {
+        voltage = int(*vars->val.integer);
+        measure->insert("Напряжение", voltage);
+    }
+
+}
+
 variable_list * ups_status::get_data(char * mib)
 {
     anOID_len = MAX_OID_LEN;
@@ -112,99 +222,3 @@ QString getStringFromUnsignedChar(unsigned char *str, size_t len)
     }
     return result;
 }
-
-ups_status::ups_status( QString *ip, quint16 *port, QString *ups_username)
-{
-
-
-    /*
-     * Initialize the SNMP library
-     */
-
-    init_snmp("snmpapp");
-
-
-    /*
-     * Initialize a "session" that defines who we're going to talk to
-     */
-    addr = ip;
-    u_port = port;
-    user_name = ups_username;
-
-    snmp_sess_init( &session );                   /* set up defaults */
-    session.peername = strdup(ip->toLocal8Bit().data());
-
-
-    /* set the SNMP version number */
-    session.version = SNMP_VERSION_1;
-    const  char *community  = ups_username->toStdString().c_str();
-
-    session.community = (uchar*)community;
-    session.community_len = strlen((char*)session.community);
-    //session.rcvMsgMaxSize = MAX_NAME_LEN;
-
-    /*
-     * Open the session
-     */
-
-    ss = snmp_open(&session);                     /* establish the session */
-
-    if (!ss) {
-        //snmp_sess_perror("ack", &session);
-        //SOCK_CLEANUP;
-        //exit(1);
-        qDebug() << "Error opening SNMP library...";
-        return;
-    }
-
-    vars = get_data((char*)"SNMPv2-MIB::sysName.0");
-
-
-
-    if (status == STAT_SUCCESS && response->errstat == SNMP_ERR_NOERROR) {
-        print_variable(vars->name, vars->val_len, vars);
-        //qDebug() << "Error: \n" << snmp_errstring(response->errstat);
-
-
-    } else {
-        /*
-         * FAILURE: print what went wrong!
-         */
-
-        if (status == STAT_SUCCESS)
-            qDebug() << "Error in packet\n Reason: \n" << snmp_errstring(response->errstat);
-        else if (status == STAT_TIMEOUT)
-            qDebug() << "Timeout: No response from \n" <<      session.peername;
-        else
-            qDebug() << "Somthig error: " << ss;
-
-    }
-
-    //  if (response)
-    //     snmp_free_pdu(response);
-
-    vars = get_data((char*)"SNMPv2-MIB::sysLocation.0");
-    if (vars)
-        print_variable(vars->name, vars->val_len, vars);
-
-    vars = get_data((char*)"DISMAN-EVENT-MIB::sysUpTimeInstance");
-    if (vars)
-        print_variable(vars->name, vars->val_len, vars);
-
-    vars = get_data((char*)"SNMPv2-SMI::mib-2.33.1.3.3.1.3.1"); //Input voltage MIB
-    if (vars)
-        print_variable(vars->name, vars->val_len, vars);
-
-    if (response)
-        snmp_free_pdu(response);
-
-    //
-    qDebug() << "UPS SNMP monitoring initialization complete.";
-}
-
-ups_status::~ups_status()
-{
-    snmp_close(ss);
-    //SOCK_CLEANUP;
-}
-

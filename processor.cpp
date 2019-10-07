@@ -342,7 +342,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
 
     resetStatus();
 
-    //range coefficients
+    //range coefficients init
     m_range = new QMap<QString, int>;
     m_range->insert("CO", 10);
     m_range->insert("NO2", 1000);
@@ -357,9 +357,16 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     m_range->insert("PM10", 1000);
     m_range->insert("Ресурс сенс. NO", 1);
     m_range->insert("Ресурс сенс. H2S", 1);
+    m_range->insert("Напряжение мин.", 1);
+    m_range->insert("Напряжение макс.", 1);
 
 
-
+    //UPS data init
+    m_ups->read_voltage();
+    m_data->insert("Напряжение мин.", m_ups->voltage);
+    //m_measure->insert("Напряжение мин.", 1);
+    m_data->insert("Напряжение макс.", m_ups->voltage);
+    //m_measure->insert("Напряжение макс.", 1);
 
 
 }
@@ -1048,6 +1055,8 @@ void processor::startTransactTimer( QSqlDatabase *conn) //start by signal dbForm
 
 }
 
+
+//Read the status of devices that are connected via TCP
 void processor::readSocketStatus()
 {
     QString tmp_type_measure;
@@ -1096,5 +1105,27 @@ void processor::readSocketStatus()
     //Meteostation data reading
 
     m_meteo->sendData("LOOP 1");
+
+    //UPS handling
+    m_ups->read_voltage();
+    if (!m_measure->value("Напряжение мин."))
+    {   m_data->insert("Напряжение мин.", m_ups->voltage);
+        m_measure->insert("Напряжение мин.", 1); //we don't interested in average voltage - we need lowest or highest values
+
+    }
+
+    if (!m_measure->value("Напряжение макс."))
+    {   m_data->insert("Напряжение макс.", m_ups->voltage);
+        m_measure->insert("Напряжение макс.", 1); //we don't interested in average voltage - we need lowest or highest values
+
+    }
+
+    if (m_ups->voltage < m_data->value("Напряжение мин.")){
+        m_data->insert("Напряжение мин.", m_ups->voltage);
+    }
+
+    if (m_ups->voltage > m_data->value("Напряжение макс.")){
+        m_data->insert("Напряжение макс.", m_ups->voltage);
+    }
 
 }

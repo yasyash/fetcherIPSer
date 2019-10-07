@@ -41,27 +41,39 @@ class ups_status
 public:
     explicit ups_status( QString *ip, quint16 *port, QString *ups_username);
     ~ups_status();
+    void read_voltage();
 
+public:
     struct snmp_session session, *ss;
     struct snmp_pdu *pdu;
     struct snmp_pdu *response ;
 
-   oid anOID[MAX_OID_LEN];
-   size_t anOID_len = MAX_OID_LEN;
+    oid anOID[MAX_OID_LEN];
+    size_t anOID_len = MAX_OID_LEN;
 
-   struct variable_list *vars;
-   int status;
+    struct variable_list *vars;
+    int status;
 
-   variable_list * get_data(char *mib);
-    //Device *m_device;
-    //Variable *m_model;
-    //Variable *m_voltage;
     QString *addr;
     quint16 *u_port;
     QString *user_name;
 
+    QString *model;
+    QString *location;
+    int *uptime;
+    int voltage;
+
+    bool is_read;
+    uint sample_t;
+    QMap<QString, int> *measure;
+
+
+    //Device *m_device;
+    //Variable *m_model;
+    //Variable *m_voltage;
 private:
     //Client * m_client;
+    variable_list * get_data(char *mib);
 
 signals:
 
