@@ -60,6 +60,7 @@ MeteoTcpSock::MeteoTcpSock(QObject *parent , QString *ip, quint16 *port) : QObje
     measure->insert("RAIN_DAILY", 0);
     measure->insert("RAIN_HOUR", 0);
     measure->insert("ET_DAILY", 0);
+    measure->insert("REMOTE_BATT", 0);
 
     is_read = false;
     status = "";
@@ -135,7 +136,8 @@ void MeteoTcpSock::readData()
         measure->insert("SOL_RAD",  measure->value("SOL_RAD") + ((float)(data[46]<<4 + data[45])));//unit in watt on m2
         measure->insert("RAIN_DAILY",  measure->value("RAIN_DAILY") + ((float)(data[52]<<4 + data[51]))*0.2f);//last day quantity
         measure->insert("RAIN_HOUR", measure->value("RAIN_DAILY") + ((float)(data[56]<<4 + data[55]))*0.2f); //last hour quantity
-        measure->insert("ET",  measure->value("ET") + ((float)(data[69]<<4 + data[68])/1000)*25.4f);//inchs  TO mm Conversion Evapotranspiration Formula
+        measure->insert("ET_DAILY",  measure->value("ET_DAILY") + ((float)(data[69]<<4 + data[68])/1000)*25.4f);//inchs  TO mm Conversion Evapotranspiration Formula
+        measure->insert("REMOTE_BATT",  measure->value("REMOTE_BATT") + (float)(data[87]));//%
 
         sample_t++;
     }
