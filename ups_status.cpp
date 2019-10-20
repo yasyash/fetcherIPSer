@@ -153,8 +153,11 @@ variable_list * ups_status::get_data(char * mib)
     //print_variable(response->variables->name, response->variables->val_len, response->variables);
 
 
-
-    return response->variables;
+    if (status == STAT_SUCCESS)
+        return response->variables;
+    else {
+        return nullptr;
+    }
 }
 
 /*

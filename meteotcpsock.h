@@ -52,10 +52,6 @@ signals:
 private:
 
     QTcpSocket *m_sock;
-
-
-
-
     quint32 blockSize;
     QString *m_ip;
     int     *m_port;

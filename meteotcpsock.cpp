@@ -58,29 +58,13 @@ MeteoTcpSock::MeteoTcpSock(QObject *parent , QString *ip, quint16 *port) : QObje
     measure->insert("UV_IDX", 0);
     measure->insert("SOL_RAD", 0);
     measure->insert("RAIN_DAILY", 0);
-    measure->insert("RAIN_15MIN", 0);
     measure->insert("RAIN_HOUR", 0);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    measure->insert("ET_DAILY", 0);
 
     is_read = false;
     status = "";
+    sample_t = 0;
+
     qDebug() << "Meteostation handling has been initialized.";
 
 }
@@ -130,11 +114,30 @@ void MeteoTcpSock::readData()
 
         this->is_read = true;
 
-        emit (dataReady(data));
+        //emit (dataReady(data));
 
 
         blockSize = 0;
 
+        measure->insert("PRESSURE",  measure->value("PRESSURE") + ((float)(data[69]<<4 + data[68])/1000)*25.4f);//inchs Hg TO mm Hg Conversion Formula
+        measure->insert("TEMP_IN", measure->value("TEMP_IN") + ((float)(data[11]<<4 + data[10])-35)*5/9); //Fahrenheit TO Celsius Conversion Formula
+        measure->insert("HUM_IN", measure->value("HUM_IN") + (float)(data[12]));
+        measure->insert("TEMP_OUT", measure->value("TEMP_OUT") + ((float)(data[14]<<4 + data[13])-35)*5/9); //Fahrenheit TO Celsius Conversion Formula
+        measure->insert("WIND_SPEED", measure->value("WIND_SPEED") + (float)data[15]*1609.344f);//mile to meter convertion formula
+        measure->insert("WIND_DIR",  measure->value("WIND_DIR") + ((float)(data[18]<<4 + data[17])));
+        measure->insert("DEW_POINT",  measure->value("DEW_POINT") + ((float)(data[32]<<4 + data[31])-35)*5/9); //Fahrenheit TO Celsius Conversion Formula
+        measure->insert("HUM_OUT", measure->value("HUM_OUT") + (float)(data[34]));
+        measure->insert("HEAT_IDX", measure->value("HEAT_IDX") + ((float)(data[37]<<4 + data[36])-35)*5/9); //Fahrenheit TO Celsius Conversion Formula
+        measure->insert("WIND_CHILL", measure->value("WIND_CHILL") + ((float)(data[39]<<4 + data[38])-35)*5/9); //Fahrenheit TO Celsius Conversion Formula
+        measure->insert("THSW_IDX", measure->value("THSW_IDX") + ((float)(data[41]<<4 + data[40])-35)*5/9); //Fahrenheit TO Celsius Conversion Formula
+        measure->insert("RAIN_RATE", measure->value("RAIN_RATE") + ((float)(data[43]<<4 + data[42]))*0.2f);//mm per hour
+        measure->insert("UV_IDX", measure->value("UV_IDX") + (float)(data[44]));
+        measure->insert("SOL_RAD",  measure->value("SOL_RAD") + ((float)(data[46]<<4 + data[45])));//unit in watt on m2
+        measure->insert("RAIN_DAILY",  measure->value("RAIN_DAILY") + ((float)(data[52]<<4 + data[51]))*0.2f);//last day quantity
+        measure->insert("RAIN_HOUR", measure->value("RAIN_DAILY") + ((float)(data[56]<<4 + data[55]))*0.2f); //last hour quantity
+        measure->insert("ET",  measure->value("ET") + ((float)(data[69]<<4 + data[68])/1000)*25.4f);//inchs  TO mm Conversion Evapotranspiration Formula
+
+        sample_t++;
     }
 
     void MeteoTcpSock::displayError(QAbstractSocket::SocketError socketError)
@@ -143,17 +146,17 @@ void MeteoTcpSock::readData()
         case QAbstractSocket::RemoteHostClosedError:
             break;
         case QAbstractSocket::HostNotFoundError:
-            qDebug()<<   ("Dust measure equipment handling error: The host was not found. Please check the "
+            qDebug()<<   ("Meteostation handling error: The host was not found. Please check the "
                           "host name and port settings.");
             break;
         case QAbstractSocket::ConnectionRefusedError:
-            qDebug()<< ("Dust measure equipment handling error: The connection was refused by the peer. "
+            qDebug()<< ("Meteostation handling error: The connection was refused by the peer. "
                         "Make sure the fortune server is running, "
                         "and check that the host name and port "
                         "settings are correct.");
             break;
         default:
-            qDebug()<< ("Dust measure equipment handling error: ") << (m_sock->errorString());
+            qDebug()<< ("Meteostation handling error: ") << (m_sock->errorString());
         }
 
     }

@@ -1104,7 +1104,7 @@ void processor::readSocketStatus()
 
     //Meteostation data reading
 
-    m_meteo->sendData("LOOP 1");
+    m_meteo->sendData("LPS 2 1");//sendData("LOOP 1");
 
     //UPS handling
     m_ups->read_voltage();
