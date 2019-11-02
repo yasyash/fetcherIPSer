@@ -33,6 +33,9 @@ public:
 private slots:
     void setData(QByteArray &data);
 
+public:
+    QMap<QString, QString>   * m_table; //assosiative array of polling data <key, meaning>
+
 
 
 };

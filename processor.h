@@ -109,7 +109,14 @@ private:
     bool verbose; //verbose mode flag
 
     ups_status *m_ups;   //member for UPS status
+    QString m_ups_ip;
+    quint16 m_ups_port;
+    QString m_ups_username;
+
     TcpSock    *m_fire; //member for Fire alarm status
+    QString m_alarmip;
+    quint16 m_alarmport;
+
     DustTcpSock    *m_dust; //member for Dust Measure
     QString m_dust_ip;
     quint16 m_dust_port;

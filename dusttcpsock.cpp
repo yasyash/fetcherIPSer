@@ -25,7 +25,6 @@ DustTcpSock::DustTcpSock(QObject *parent , QString *ip, quint16 *port) : QObject
 
 {
 
-
     m_sock = new QTcpSocket(this);
 
     connect(m_sock, SIGNAL(readyRead()), this, SLOT(readData()));
@@ -51,6 +50,8 @@ DustTcpSock::DustTcpSock(QObject *parent , QString *ip, quint16 *port) : QObject
 
     is_read = false;
     status = "";
+    connected = m_sock->state();
+
     qDebug() << "Dust measure equipment handling has been initialized.";
 
 }
@@ -191,6 +192,9 @@ void DustTcpSock::readData()
         default:
             qDebug()<< ("Dust measure equipment handling error: ") << (m_sock->errorString());
         }
+
+        m_sock->close();
+        connected = m_sock->state();
 
     }
 

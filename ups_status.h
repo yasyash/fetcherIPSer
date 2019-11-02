@@ -53,6 +53,7 @@ public:
 
     struct variable_list *vars;
     int status;
+    int err_count = 0;
 
     QString *addr;
     quint16 *u_port;

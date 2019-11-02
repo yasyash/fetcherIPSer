@@ -66,6 +66,9 @@ MeteoTcpSock::MeteoTcpSock(QObject *parent , QString *ip, quint16 *port) : QObje
     status = "";
     sample_t = 0;
 
+    connected = m_sock->state();
+
+
     qDebug() << "Meteostation handling has been initialized.";
 
 }
@@ -75,6 +78,7 @@ MeteoTcpSock::MeteoTcpSock(QObject *parent , QString *ip, quint16 *port) : QObje
 
 MeteoTcpSock::~MeteoTcpSock()
 {
+    m_sock->close();
     m_sock->disconnectFromHost();
 }
 
@@ -185,6 +189,9 @@ void MeteoTcpSock::displayError(QAbstractSocket::SocketError socketError)
     default:
         qDebug()<< ("Meteostation handling error: ") << (m_sock->errorString());
     }
+    m_sock->close();
+    connected = m_sock->state();
+
 
 }
 

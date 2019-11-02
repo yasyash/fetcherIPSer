@@ -20,12 +20,15 @@
 #define TCPSOCKSWIDGET_H
 
 #include <QTcpSocket>
+#include <QTcpServer>
+#include <QHostAddress>
+
 #include "surgard.h"
 
 
 class TcpSock : public QObject
 {
-Q_OBJECT
+    Q_OBJECT
 
 public:
     TcpSock(QObject *parent, QString *ip, quint16 *port);
@@ -36,8 +39,10 @@ public:
 protected:
     void changeInterface(const QString& address, quint16 portNbr);
 
-private slots:
-    void on_cbEnabled_clicked(bool checked);
+public slots:
+    // void on_cbEnabled_clicked(bool checked);
+    //void start();
+    void acceptConnection();
     void readData();
     void displayError(QAbstractSocket::SocketError socketError);
 
@@ -47,13 +52,17 @@ signals:
     void dataReady(QByteArray &str);
 
 private:
-    QTcpSocket *m_sock;
+    QTcpServer *m_srv = nullptr;
+    QTcpSocket *m_sock = nullptr;
     quint32 blockSize;
-    surgard *surgardI;
     QString *m_ip;
     int     *m_port;
 
-   // QDataStream *in_stream;
+public:
+    QAbstractSocket::SocketState connected = QAbstractSocket::UnconnectedState;
+    surgard *surgardI;
+
+    // QDataStream *in_stream;
 };
 
 #endif // TCPSOCKSWIDGET_H

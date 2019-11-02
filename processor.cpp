@@ -54,24 +54,24 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     }
 
     // UPS init
-    QString ups_ip = cmdline_args.value(cmdline_args.indexOf("-upsip") +1);
-    if (ups_ip == "")
+    m_ups_ip = cmdline_args.value(cmdline_args.indexOf("-upsip") +1);
+    if (m_ups_ip == "")
     {
         qDebug ( "IP address of UPS is not set.");
     }
     else
     {
 
-        quint16 ups_port = cmdline_args.value(cmdline_args.indexOf("-upsport") +1).toUShort();
-        if (ups_port <= 0)
+        m_ups_port = cmdline_args.value(cmdline_args.indexOf("-upsport") +1).toUShort();
+        if (m_ups_port <= 0)
         {
             qDebug ("UPS port error:  expected parameter");
         }
         else
         {
-            QString ups_username = cmdline_args.value(cmdline_args.indexOf("-upsuser") +1);
+            m_ups_username = cmdline_args.value(cmdline_args.indexOf("-upsuser") +1);
 
-            m_ups = new ups_status(&ups_ip, &ups_port, &ups_username);
+            m_ups = new ups_status(&m_ups_ip, &m_ups_port, &m_ups_username);
             //qDebug() << "UPS model: "<< QString::fromStdString(m_ups->m_model->getValue().data()[0]) <<"\n Voltage: "
             //<< QString::fromStdString(m_ups->m_voltage->getValue().data()[0]);
         }
@@ -249,21 +249,21 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     emit(AsciiPortActive(true));
 
     //alarm init
-    QString alarmip = cmdline_args.value(cmdline_args.indexOf("-alarmip") +1);
-    if (alarmip == "")
+    m_alarmip = cmdline_args.value(cmdline_args.indexOf("-alarmip") +1);
+    if (m_alarmip == "")
     {
         qDebug ( "IP address of fire alarm is not set.");
     }
     else
     {
-        quint16 alarmport = cmdline_args.value(cmdline_args.indexOf("-alarmport") +1).toUShort();
-        if (alarmport <= 0)
+        m_alarmport = cmdline_args.value(cmdline_args.indexOf("-alarmport") +1).toUShort();
+        if (m_alarmport <= 0)
         {
             qDebug ( "Port of fire alarm is not set.");
         }
         else
         {
-            m_fire = new TcpSock(this, &alarmip, &alarmport);
+            m_fire = new TcpSock(this, &m_alarmip, &m_alarmport);
         }
 
     }
@@ -925,11 +925,22 @@ void processor::renovateSlaveID( void )
             m_pool->insert (j+1, numCoils); //renovate of registers quantity
         }
     }
-    m_dust->~DustTcpSock();
-    m_dust = new DustTcpSock(this, &m_dust_ip, &m_dust_port);
+    if ( (m_dust_ip != "") && (m_dust_port >0)){
+        m_dust->~DustTcpSock();
+        m_dust = new DustTcpSock(this, &m_dust_ip, &m_dust_port);
+        m_dust->sendData( "MSTART"); //restart Dust measure equipment
+    }
 
-    m_dust->sendData( "MSTART"); //restart Dust measure equipment
+    if ( (m_meteo_ip != "") && (m_meteo_port >0)){
 
+        m_meteo->~MeteoTcpSock();
+        m_meteo = new MeteoTcpSock(this, &m_meteo_ip, &m_meteo_port);
+    }
+
+    if ( (m_ups_ip != "") && (m_ups_port >0)){
+
+        m_ups->err_count = 0;
+    }
 
 
 }
@@ -1071,61 +1082,65 @@ void processor::readSocketStatus()
     //if (m_dust->status == "Running"){
 
     //Dust data reading
-    m_dust->sendData( "RMMEAS");
-    //while (!m_dust->is_read);
-    m_dust->is_read = false;
-    qDebug() << "count " << dust.length();
+    if (m_dust->connected){
+        m_dust->sendData( "RMMEAS");
+        //while (!m_dust->is_read);
+        m_dust->is_read = false;
+        qDebug() << "count " << dust.length();
 
-    for (int i = 0; i < dust.length(); i++)
-    {
-        tmp_type_measure = dust[i];
-        tmp = m_data->value(tmp_type_measure, -1); //detect first measure
-
-        if ( tmp == -1)
+        for (int i = 0; i < dust.length(); i++)
         {
-            if (m_dust->measure->value(tmp_type_measure) >0)
+            tmp_type_measure = dust[i];
+            tmp = m_data->value(tmp_type_measure, -1); //detect first measure
+
+            if ( tmp == -1)
             {
-                m_data->insert(tmp_type_measure, m_dust->measure->value(tmp_type_measure)); // insert into QMap ordering pair of measure first time
-                m_measure->insert(tmp_type_measure, 1);
-                qDebug() << "measure... " << tmp_type_measure << " value = " << (float)m_dust->measure->value(tmp_type_measure)/m_range->value(tmp_type_measure);
-            }
-        } else {
-            if (m_dust->measure->value(tmp_type_measure) >0)
-            {
-                m_data->insert(tmp_type_measure, tmp + m_dust->measure->value(tmp_type_measure));
-                m_measure->insert(tmp_type_measure, m_measure->value(tmp_type_measure, 0) +1); //increment counter
-                qDebug() << "measure... " << tmp_type_measure << " value = " << (float)m_dust->measure->value(tmp_type_measure)/m_range->value(tmp_type_measure);
+                if (m_dust->measure->value(tmp_type_measure) >0)
+                {
+                    m_data->insert(tmp_type_measure, m_dust->measure->value(tmp_type_measure)); // insert into QMap ordering pair of measure first time
+                    m_measure->insert(tmp_type_measure, 1);
+                    qDebug() << "measure... " << tmp_type_measure << " value = " << (float)m_dust->measure->value(tmp_type_measure)/m_range->value(tmp_type_measure);
+                }
+            } else {
+                if (m_dust->measure->value(tmp_type_measure) >0)
+                {
+                    m_data->insert(tmp_type_measure, tmp + m_dust->measure->value(tmp_type_measure));
+                    m_measure->insert(tmp_type_measure, m_measure->value(tmp_type_measure, 0) +1); //increment counter
+                    qDebug() << "measure... " << tmp_type_measure << " value = " << (float)m_dust->measure->value(tmp_type_measure)/m_range->value(tmp_type_measure);
+                }
             }
         }
+        // }
+
+        m_dust->measure->clear();
     }
-    // }
-
-    m_dust->measure->clear();
-
     //Meteostation data reading
-
-    m_meteo->sendData("LPS 2 1");//sendData("LOOP 1");
+    if (m_meteo->connected)
+        m_meteo->sendData("LPS 2 1");//sendData("LOOP 1");
 
     //UPS handling
-    m_ups->read_voltage();
-    if (!m_measure->value("Напряжение мин."))
-    {   m_data->insert("Напряжение мин.", m_ups->voltage);
-        m_measure->insert("Напряжение мин.", 1); //we don't interested in average voltage - we need lowest or highest values
+    if (m_ups->err_count <10){ //minimum error threshold
+        m_ups->read_voltage();
+        if (!m_measure->value("Напряжение мин."))
+        {   m_data->insert("Напряжение мин.", m_ups->voltage);
+            m_measure->insert("Напряжение мин.", 1); //we don't interested in average voltage - we need lowest or highest values
 
+        }
+
+        if (!m_measure->value("Напряжение макс."))
+        {   m_data->insert("Напряжение макс.", m_ups->voltage);
+            m_measure->insert("Напряжение макс.", 1); //we don't interested in average voltage - we need lowest or highest values
+
+        }
+
+        if (m_ups->voltage < m_data->value("Напряжение мин.")){
+            m_data->insert("Напряжение мин.", m_ups->voltage);
+        }
+
+        if (m_ups->voltage > m_data->value("Напряжение макс.")){
+            m_data->insert("Напряжение макс.", m_ups->voltage);
+        }
     }
 
-    if (!m_measure->value("Напряжение макс."))
-    {   m_data->insert("Напряжение макс.", m_ups->voltage);
-        m_measure->insert("Напряжение макс.", 1); //we don't interested in average voltage - we need lowest or highest values
-
-    }
-
-    if (m_ups->voltage < m_data->value("Напряжение мин.")){
-        m_data->insert("Напряжение мин.", m_ups->voltage);
-    }
-
-    if (m_ups->voltage > m_data->value("Напряжение макс.")){
-        m_data->insert("Напряжение макс.", m_ups->voltage);
-    }
 
 }

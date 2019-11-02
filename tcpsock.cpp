@@ -18,7 +18,6 @@
 
 #include "tcpsock.h"
 #include "modbus-tcp.h"
-
 #include <QDebug>
 
 TcpSock::TcpSock(QObject *parent , QString *ip, quint16 *port) : QObject (parent)
@@ -26,45 +25,60 @@ TcpSock::TcpSock(QObject *parent , QString *ip, quint16 *port) : QObject (parent
 {
 
 
-    m_sock = new QTcpSocket(this);
-    surgardI = new surgard(this);
+    m_srv = new QTcpServer();
+    if (m_srv){
+        m_srv->listen(QHostAddress (*ip), *port);
+        //m_sock = new QUdpSocket(this);
 
-    connect(m_sock, SIGNAL(readyRead()), this, SLOT(readData()));
-    connect(m_sock, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(displayError(QAbstractSocket::SocketError)));
-    connect(this, SIGNAL(dataReady(QByteArray&)), surgardI, SLOT(setData(QByteArray&)) );
+        surgardI = new surgard(this);
 
-    changeInterface(*ip, *port);
-    qDebug() << "Fire Alarm handling has been initialized.";
+        // connect(m_sock, SIGNAL(readyRead()), this, SLOT(readData()));
+        //connect(m_sock, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(displayError(QAbstractSocket::SocketError)));
+        //connect(this, SIGNAL(dataReady(QByteArray&)), surgardI, SLOT(setData(QByteArray&)) );
+
+        connect(m_srv, SIGNAL(newConnection()), this, SLOT(acceptConnection()));
+        connect(this, SIGNAL(dataReady(QByteArray&)), surgardI, SLOT(setData(QByteArray&)) );
+
+        //connect(&tcpClient, &QIODevice::bytesWritten, this, &(Dialog::updateClientProgress);
+        connect(m_srv, SIGNAL(acceptError(QAbstractSocket::SocketError)), this, SLOT(displayError(QAbstractSocket::SocketError)));
+
+        //changeInterface(*ip, *port);
+        qDebug() << "Fire Alarm handling has been initialized.";
+    } else {
+        qDebug() << "Fire Alarm handling initialization error.";
+
+    }
 
 }
 
 TcpSock::~TcpSock()
 {
-    m_sock->disconnectFromHost();
+    m_srv->close();
 }
 
 
 
 void TcpSock::changeInterface(const QString &address, quint16 portNbr)
 {
-    m_sock->connectToHost(address, portNbr);
+    //m_srv->connectToHost(address, portNbr);
 }
 
 
-
-
-
-void TcpSock::on_cbEnabled_clicked(bool checked)
+void TcpSock::acceptConnection()
 {
-    if (checked)
-    {
+    m_sock = m_srv->nextPendingConnection();
+    if (!m_sock) {
+        qDebug() << (tr("Error: got invalid pending connection from Kros-gate!"));
+        return;
     }
-    else {
-        m_sock->disconnectFromHost();
-    }
-    //emit tcpPortActive(checked);
-}
 
+    connect(m_sock, SIGNAL(readyRead()), this, SLOT(readData()));
+    connect(m_sock, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(displayError(QAbstractSocket::SocketError)));
+    connect(m_sock, SIGNAL(disconnected()), m_sock,  SLOT(deleteLater()));
+
+    connected = m_sock->state();
+
+}
 
 void TcpSock::readData()
 {
@@ -82,16 +96,22 @@ void TcpSock::readData()
         return;
 */
 
-    // int i = m_sock->bytesAvailable();
+     //int i = m_sock->bytesAvailable();
     // char data[i];
     //in_stream.readRawData( data, i);
 
+   // QByteArray data = m_sock->readAll();
     QByteArray data = m_sock->readAll();
-    qDebug() << "Alarm data: " << data << " lenght - " << data.length() << " \n";
 
-    emit (dataReady(data));
+    qDebug() << "Alarm raw data: " << data << " lenght - " << data.length() << " \n";
+if (m_sock->atEnd())
+    m_sock->write("\6");
+//data="";
+//data = m_sock->readAll();
 
+emit (dataReady(data));
 
+   // m_sock->close();
     blockSize = 0;
 
 }
@@ -100,6 +120,7 @@ void TcpSock::displayError(QAbstractSocket::SocketError socketError)
 {
     switch (socketError) {
     case QAbstractSocket::RemoteHostClosedError:
+        qDebug()<<   ("Fire Alarm handling error: Remote host closed connection.");
         break;
     case QAbstractSocket::HostNotFoundError:
         qDebug()<<   ("Fire Alarm handling error: The host was not found. Please check the "
@@ -107,12 +128,15 @@ void TcpSock::displayError(QAbstractSocket::SocketError socketError)
         break;
     case QAbstractSocket::ConnectionRefusedError:
         qDebug()<< ("Fire Alarm handling error: The connection was refused by the peer. "
-                    "Make sure the fortune server is running, "
+                    "Make sure the fortune kros-gate daemon is running, "
                     "and check that the host name and port "
                     "settings are correct.");
         break;
     default:
         qDebug()<< ("Fire Alarm handling error: ") << (m_sock->errorString());
     }
+    m_sock->close();
+    connected = m_sock->state();
+
 
 }

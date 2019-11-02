@@ -72,7 +72,7 @@ public:
     uint sample_t;
     QMap<QString, int> *measure;
     enum _command last_command;
-
+    QAbstractSocket::SocketState connected = QAbstractSocket::UnconnectedState;
     // QDataStream *in_stream;
 };
 
