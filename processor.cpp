@@ -1118,7 +1118,7 @@ void processor::readSocketStatus()
     if (m_meteo->connected)
         m_meteo->sendData("LPS 2 1");//sendData("LOOP 1");
 
-    //UPS handling
+    //UPS acqusition data reading
     if (m_ups->err_count <10){ //minimum error threshold
         m_ups->read_voltage();
         if (!m_measure->value("Напряжение мин."))
@@ -1142,5 +1142,8 @@ void processor::readSocketStatus()
         }
     }
 
+    //Alarm data reading
+
+    qDebug() << "Alarm messages is  "<< m_fire->surgardI->m_event->count();
 
 }

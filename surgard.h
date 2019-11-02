@@ -21,6 +21,7 @@
 
 #include <QByteArray>
 #include <QObject>
+#include <QDateTime>
 
 class surgard : public QObject
 {
@@ -35,6 +36,8 @@ private slots:
 
 public:
     QMap<QString, QString>   * m_table; //assosiative array of polling data <key, meaning>
+    QMap<QDateTime, QString>   * m_event; //assosiative array of polling data <key, meaning>
+
 
 
 
