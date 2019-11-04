@@ -213,6 +213,7 @@ surgard::surgard(QObject *parent) : QObject (parent)
 
 
     m_event = new QMap<QDateTime, QString>;
+    m_event_code = new QMap<QDateTime, QString>;
 
 }
 
@@ -246,6 +247,7 @@ void surgard::setData(QByteArray &data)
         if ( QString(flag).append(event).compare("R602")) //if not duty mode wich receive each xx seconds
         {
         m_event ->insert( now , m_table->value(QString(flag).append(QString(event))));
+        m_event_code ->insert( now , QString(flag).append(QString(event)));
 
         }
 

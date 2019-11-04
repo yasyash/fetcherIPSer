@@ -944,13 +944,73 @@ void processor::renovateSlaveID( void )
 
 
 }
+void processor::squeezeAlarmMsg()
+{
+    QMap<QDateTime, QString>::iterator event_iterator;
+    QMap<QDateTime, QString>::iterator event_code_iterator;
 
+    if( (m_fire->surgardI->m_event->count() < 5))
+    {
+        if (m_fire->surgardI->m_event->count() > 1)
+        {
+            event_code_iterator = m_fire->surgardI->m_event_code->begin();
+            while ( event_code_iterator != m_fire->surgardI->m_event_code->end())
+            {
+                if (event_code_iterator.value().left(1) == "E")
+                {
+                    QString str = event_code_iterator.value().mid(1, 3);
+                    bool flag = false;
+
+                    for (event_iterator = m_fire->surgardI->m_event_code->begin()+1; event_iterator != m_fire->surgardI->m_event_code->end(); ++event_iterator)
+                    {
+                        if (event_iterator.value() == QString("R").append(str))
+                        {
+                            m_fire->surgardI->m_event_code->remove(event_iterator.key()) ;
+                            m_fire->surgardI->m_event->remove(event_iterator.key());
+                            flag = true;
+                            break;
+                        }
+                    }
+                    if (flag){
+                        m_fire->surgardI->m_event_code->remove(event_code_iterator.key());
+                        m_fire->surgardI->m_event->remove(event_code_iterator.key());
+                        event_code_iterator = m_fire->surgardI->m_event_code->begin();
+
+                    }
+                    else
+                    {
+                        event_code_iterator++;
+
+                    }
+                }
+
+            }
+        }
+
+    }
+    else
+    {
+
+        m_fire->surgardI->m_event->clear();
+        m_fire->surgardI->m_event_code->clear();
+    }
+}
 void processor::transactionDB(void)
 {
+
+
     QMap<QString, QUuid>::iterator sensor;
     int val;
     float average;
     QString tmp_time = QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss"); //all SQL INSERT should be in same time
+
+    //Alarm data reading and filtering
+
+    qDebug() << "Alarm messages is  "<< m_fire->surgardI->m_event->count();
+
+    squeezeAlarmMsg();
+
+    //Sensor data processing
 
     for (sensor = m_uuid->begin(); sensor != m_uuid->end(); ++sensor)
     {
@@ -1070,6 +1130,8 @@ void processor::startTransactTimer( QSqlDatabase *conn) //start by signal dbForm
 //Read the status of devices that are connected via TCP
 void processor::readSocketStatus()
 {
+
+
     QString tmp_type_measure;
     QStringList dust = {"PM1", "PM2.5", "PM4", "PM10", "PM"  };
     int tmp;
@@ -1145,5 +1207,7 @@ void processor::readSocketStatus()
     //Alarm data reading
 
     qDebug() << "Alarm messages is  "<< m_fire->surgardI->m_event->count();
+
+
 
 }

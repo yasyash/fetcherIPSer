@@ -125,6 +125,10 @@ private:
     QString m_meteo_ip;
     quint16 m_meteo_port;
 
+private:
+    void squeezeAlarmMsg();
+
+
 };
 
 #endif // PROCESSOR_H
