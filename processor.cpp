@@ -982,8 +982,9 @@ void processor::squeezeAlarmMsg()
                         event_code_iterator++;
 
                     }
+                } else{
+                    event_code_iterator++;
                 }
-
             }
         }
 
@@ -1000,15 +1001,62 @@ void processor::transactionDB(void)
 
 
     QMap<QString, QUuid>::iterator sensor;
+    QMap<QDateTime, QString>::iterator event_iterator;
+
+    QSqlQuery query = QSqlQuery(*m_conn);
+
+
     int val;
     float average;
     QString tmp_time = QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss"); //all SQL INSERT should be in same time
 
     //Alarm data reading and filtering
 
-    qDebug() << "Alarm messages is  "<< m_fire->surgardI->m_event->count();
-
     squeezeAlarmMsg();
+
+    for (event_iterator = m_fire->surgardI->m_event->begin(); event_iterator != m_fire->surgardI->m_event->end(); ++event_iterator)
+    {
+        query.prepare("INSERT INTO fire (idd, typemeasure, surgard, date_time_in) "
+                      "VALUES (:idd, :typemeasure, :surgard, :date_time_in)");
+
+        query.bindValue(":idd", QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")));
+        query.bindValue(":date_time_in", event_iterator.key().toString( "yyyy-MM-dd hh:mm:ss"));
+        query.bindValue(":typemeasure", event_iterator.value());
+        query.bindValue(":surgard", m_fire->surgardI->m_event_code->value( event_iterator.key()) );
+
+        if (!m_conn->isOpen())
+            m_conn->open();
+
+        if(!m_conn->isOpen())
+        {
+            qDebug() << "Unable to reopen database connection!";
+        }
+        else
+        {
+            if (verbose)
+            {
+                qDebug() << "Transaction status to the Fire Alarm table is " << ((query.exec() == true) ? "successful!" :  "not complete!");
+                qDebug() << "The last error is " << (( query.lastError().text().trimmed() == "") ? "absent" : query.lastError().text());
+            }
+            else
+            {
+                if (query.exec())
+                {
+                    qDebug() << "Insertion to the Fire Alarm table is successful!";
+                }
+                else
+                {
+                    qDebug() << "Insertion to the Fire Alarm table is not successful!";
+
+                }
+            }
+
+        }
+    }
+    query.finish();
+
+    m_fire->surgardI->m_event->clear();
+    m_fire->surgardI->m_event_code->clear();
 
     //Sensor data processing
 
@@ -1025,7 +1073,7 @@ void processor::transactionDB(void)
 
 
         if (val != -1){
-            QSqlQuery query = QSqlQuery(*m_conn);
+            //QSqlQuery query = QSqlQuery(*m_conn);
             query.prepare("INSERT INTO sensors_data (idd, serialnum, date_time, typemeasure, measure, is_alert) "
                           "VALUES (:idd, :serialnum, :date_time, :typemeasure, :measure, false)");
 

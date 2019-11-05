@@ -242,7 +242,7 @@ void surgard::setData(QByteArray &data)
         qDebug() << "Fire alarm group: " << (group);
         qDebug() << "Fire alarm chain: " << (chain);
 
-        QDateTime now = QDateTime::currentDateTime();
+        QDateTime now =  QDateTime::currentDateTime();
 
         if ( QString(flag).append(event).compare("R602")) //if not duty mode wich receive each xx seconds
         {
