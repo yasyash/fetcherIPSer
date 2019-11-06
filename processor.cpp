@@ -949,10 +949,29 @@ void processor::squeezeAlarmMsg()
     QMap<QDateTime, QString>::iterator event_iterator;
     QMap<QDateTime, QString>::iterator event_code_iterator;
 
-    if( (m_fire->surgardI->m_event->count() < 5))
+    if( (m_fire->surgardI->m_event->count() < 10))
     {
         if (m_fire->surgardI->m_event->count() > 1)
         {
+            //squeezing of the repeating sequence
+            event_code_iterator = m_fire->surgardI->m_event_code->begin();
+
+            while ( event_code_iterator != m_fire->surgardI->m_event_code->end())
+            { QString val = event_code_iterator.value();
+
+                event_code_iterator++;
+                if (event_code_iterator!=m_fire->surgardI->m_event_code->end())
+                {
+                    if (val == event_code_iterator.value())
+                    {
+                        m_fire->surgardI->m_event_code->remove(event_code_iterator.key());
+                        m_fire->surgardI->m_event->remove(event_code_iterator.key());
+                        event_code_iterator--;
+                    }
+                }
+            }
+
+            //pair "E" - "R" squeezing
             event_code_iterator = m_fire->surgardI->m_event_code->begin();
             while ( event_code_iterator != m_fire->surgardI->m_event_code->end())
             {
