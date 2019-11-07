@@ -1021,6 +1021,7 @@ void processor::transactionDB(void)
 
     QMap<QString, QUuid>::iterator sensor;
     QMap<QDateTime, QString>::iterator event_iterator;
+    QMap<QString, float>::iterator meteo_iterator;
 
     QSqlQuery query = QSqlQuery(*m_conn);
 
@@ -1076,6 +1077,56 @@ void processor::transactionDB(void)
 
     m_fire->surgardI->m_event->clear();
     m_fire->surgardI->m_event_code->clear();
+
+    //Meteo data processing
+    if (m_meteo->sample_t >0){
+        query.prepare("INSERT INTO meteo (station, date_time, bar, temp_in, hum_in, temp_out, hum_out, speed_wind, dir_wind, dew_pt, heat_indx, chill_wind, thsw_indx, rain, rain_rate, uv_indx, rad_solar, et) "
+                      "VALUES (:station, :date_time, :bar, :temp_in, :hum_in, :temp_out, :hum_out, :speed_wind, :dir_wind, :dew_pt, :heat_indx, :chill_wind, :thsw_indx, :rain, :rain_rate, :uv_indx, :rad_solar, :et)");
+
+        query.bindValue(":station", QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")));
+        query.bindValue(":date_time", QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss"));
+
+        for (meteo_iterator = m_meteo->measure->begin(); meteo_iterator != m_meteo->measure->end(); ++meteo_iterator)
+        {
+
+            query.bindValue(QString(":").append(meteo_iterator.key()), meteo_iterator.value()/m_meteo->sample_t);
+
+
+        }
+        if (!m_conn->isOpen())
+            m_conn->open();
+
+        if(!m_conn->isOpen())
+        {
+            qDebug() << "Unable to reopen database connection!";
+        }
+        else
+        {
+            if (verbose)
+            {
+                qDebug() << "Transaction status to the meteostation's table is " << ((query.exec() == true) ? "successful!" :  "not complete!");
+                qDebug() << "The last error is " << (( query.lastError().text().trimmed() == "") ? "absent" : query.lastError().text());
+            }
+            else
+            {
+                if (query.exec())
+                {
+                    qDebug() << "Insertion to the meteostation's table is successful!";
+                }
+                else
+                {
+                    qDebug() << "Insertion to the meteostation's table is not successful!";
+
+                }
+            }
+
+        }
+
+        query.finish();
+
+        m_meteo->measure->clear();
+        m_meteo->sample_t = 0;
+    }
 
     //Sensor data processing
 
