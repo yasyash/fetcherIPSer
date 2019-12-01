@@ -64,7 +64,6 @@ public slots:
         emit finished ();
     }
     void fillSensorData( bool *_is_read, QMap<QString, float> *_measure, QMap<QString, int> *_sample); //sensor equipment type or name
-void test(void);
 
 
 private slots:

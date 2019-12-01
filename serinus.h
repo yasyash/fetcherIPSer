@@ -32,12 +32,12 @@ public:
     Serinus(QObject *parent, QString *ip, quint16 *port);
     virtual ~Serinus();
 
-    void sendData(int command, QByteArray data);
+    void sendData(int command, QByteArray *data);
 
 signals:
     void tcpPortActive(bool val);
     void connectionError(const QString &msg);
-    void dataIsReady( bool *is_read, QMap<QString, float> *_measure, QMap<QString, int> *_sample    );
+    void dataIsReady( bool *is_read, QMap<QString, float> *_measure, QMap<QString, int> *_sample  );
 
 
 protected:
@@ -54,7 +54,7 @@ private:
     QTcpSocket *m_sock;
     quint32 blockSize;
     QString *m_ip;
-    int     *m_port;
+    int *m_port;
 
 public:
     //enum _status {Idle, Waiting, Running};

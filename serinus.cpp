@@ -28,7 +28,7 @@ Serinus::Serinus(QObject *parent , QString *ip, quint16 *port) : QObject (parent
     m_sock = new QTcpSocket(this);
 
     connect(m_sock, SIGNAL(readyRead()), this, SLOT(readData()));
-   // connect(m_sock, SIGNAL(bytesWritten(qint64)), this, SLOT(writes()));
+    // connect(m_sock, SIGNAL(bytesWritten(qint64)), this, SLOT(writes()));
 
     connect(m_sock, SIGNAL(error(QAbstractSocket::SocketError)), this, SLOT(displayError(QAbstractSocket::SocketError)));
     //connect(this, SIGNAL(dataIsReady(const QString)), this, SLOT(writes()) );
@@ -106,50 +106,56 @@ void Serinus::readData()
         measure->insert("H2S", 0);
         sample_t->insert("SO2", 0);
         sample_t->insert("H2S", 0);
+        is_read = false;
     }
 
     char sign;
     int expo;
     uint32_t mantissa;
     uint32_t ieee;
-    int i;
+    int i, j;
     float result;
 
-    if (( int(data[2]) == 1 ) && (int(data[4]) == 5))
+    if (( int(data[2]) == 1 ) && (int(data[4]) == 10)) //detect right response for pri. and sec. gas request
     {
-        sign = data [6] >> 7;
-        ieee = uint32_t((uchar(data [6]) << 24 ) | (uchar(data [7]) << 16) | (uchar(data[8]) << 8) | uchar(data[9]));
-        expo = (ieee & 0x7F800000) >> 23;
-        expo -= 127;
+        for (j = 0; j < 2; j++) {
 
-        mantissa = (ieee & 0x7FFFFF);
-        float dec = 1.0f;
-        for(i=0; i<=22; i++) {
-            if(((mantissa >> (22 - i)) & 1) != 0) {
-                dec += float(pow(2, -i-1));
+
+
+            sign = data [5*j + 6] >> 7;
+            ieee = uint32_t((uchar(data [5*j + 6]) << 24 ) | (uchar(data [5*j + 7]) << 16) | (uchar(data[5*j + 8]) << 8) | uchar(data[5*j + 9]));
+            expo = (ieee & 0x7F800000) >> 23;
+            expo -= 127;
+
+            mantissa = (ieee & 0x7FFFFF);
+            float dec = 1.0f;
+            for(i=0; i<=22; i++) {
+                if(((mantissa >> (22 - i)) & 1) != 0) {
+                    dec += float(pow(2, -i-1));
+                }
             }
+
+            result = float( pow(2,expo));
+            if(sign)
+                result = -1*result * dec;
+            else
+                result = result * dec;
+
+            if (int(data[5*j + 5]) == 50){
+                sample_t->insert("SO2", sample_t->value("SO2")+1);
+                measure->insert("SO2",  measure->value("SO2") + result);
+            }
+
+            if (int(data[5*j + 5]) == 51){
+                sample_t->insert("H2S", sample_t->value("H2S")+1);
+                measure->insert("H2S", measure->value("H2S") + result);
+            }
+
         }
-
-        result = float( pow(2,expo));
-        if(sign)
-            result = -1*result * dec;
-        else
-            result = result * dec;
-
-        if (int(data[5]) == 50){
-            sample_t->insert("SO2", sample_t->value("SO2")+1);
-        measure->insert("SO2",  measure->value("SO2") + result);
-        }
-
-        if (int(data[5]) == 51){
-            sample_t->insert("H2S", sample_t->value("H2S")+1);
-            measure->insert("H2S", measure->value("H2S") + result);
-                    }
     }
-        QString msg = "Serinus";
-        is_read = false;
+    is_read = false;
 
-        emit dataIsReady(&is_read, measure, sample_t);
+    emit dataIsReady(&is_read, measure, sample_t);
 
 
     blockSize = 0;
@@ -180,31 +186,12 @@ void Serinus::displayError(QAbstractSocket::SocketError socketError)
 
 }
 
-void Serinus::sendData(int command, QByteArray data)
+void Serinus::sendData(int command, QByteArray *data)
 {
-    /*   if (strcmp(data, "RDMN")==0)
-            last_command = RDMN;
-
-        if (strcmp(data, "MSTART")==0)
-            last_command = MSTART;
-
-        if (strcmp(data, "MSTOP")==0)
-            last_command = MSTOP;
-
-        if (strcmp(data, "MSTATUS")==0)
-            last_command = MSTATUS;
-
-        if (strcmp(data, "RMMEAS")==0)
-            last_command = RMMEAS;*/
-
-
-
-    // char *str = (char*)(malloc(strlen(data) * sizeof(char) + 7));
-    // *str = 0x02;
     int checksum =  0; //id = 0
-    checksum = checksum ^ command ^ data.length() ^ data[0];
+    checksum = checksum ^ command ^ data->length() ^ data->at(0) ^ data->at(1);
 
-    QString _msg = QString(0x02) + QLatin1Char(0) + QLatin1Char(command) + QLatin1Char(0x03) + QString(data.length()) + QString(data) + QString(checksum) + QLatin1Char(0x04);
+    QString _msg = QString(0x02) + QLatin1Char(0) + QLatin1Char(command) + QLatin1Char(0x03) + QString(data->length()) + QString(data->at(0)) + QString(data->at(1)) + QString(checksum) + QLatin1Char(0x04);
     //strcat(str,  QLatin1Char(51));
     //strcat(str,  "\r");
     qint64 lnt = _msg.size();//qint64(strlen(str));

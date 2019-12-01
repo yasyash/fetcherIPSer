@@ -375,8 +375,8 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     m_range->insert("CO", 10);
     m_range->insert("NO2", 1000);
     m_range->insert("NO", 1000);
-    m_range->insert("SO2", 10000);
-    m_range->insert("H2S", 10000);
+    m_range->insert("SO2", 1000000);
+    m_range->insert("H2S", 1000000);
     m_range->insert("Пыль общая", 1000);
     m_range->insert("PM", 1000);
     m_range->insert("PM1", 1000);
@@ -1356,7 +1356,13 @@ void processor::readSocketStatus()
 
     // Read Serinus status
     if (m_serinus->connected)
-        m_serinus->sendData(1, QByteArray(1, 50)); //primary gas response
+    {   QByteArray ba;
+        ba.resize(2);
+        ba[0] = 50; //primary gas response
+        ba[1] = 51; //secondary gas response
+        m_serinus->sendData(1, &ba);
+
+    }
 
 
 }
@@ -1376,20 +1382,9 @@ void processor::fillSensorData( bool *_is_read, QMap<QString, float> *_measure, 
 
         }
 
-     //   m_data->insert("SO2", int(m_serinus->measure->value("SO2") * m_range->value("SO2")) + m_data->value("SO2"));
-      //  m_measure->insert("SO2", m_measure->value("SO2") + m_serinus->sample_t->value("SO2"));
-
-      //  m_data->insert("H2S", int(m_serinus->measure->value("H2S") * m_range->value("H2S")) + m_data->value("H2S"));
-     //   m_measure->insert("H2S", m_measure->value("H2S") + m_serinus->sample_t->value("H2S"));
+    }
     *_is_read = true;
 
-    }
 }
 
 
-void processor::test()
-{
-    int i = 0;
-    i++;
-
-}
