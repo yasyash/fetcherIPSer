@@ -33,7 +33,7 @@
 #include "tcpsock.h"
 #include "dusttcpsock.h"
 #include "meteotcpsock.h"
-
+#include "serinus.h"
 
 
 class processor : public QObject
@@ -63,6 +63,9 @@ public slots:
     {
         emit finished ();
     }
+    void fillSensorData( bool *_is_read, QMap<QString, float> *_measure, QMap<QString, int> *_sample); //sensor equipment type or name
+void test(void);
+
 
 private slots:
     void sendModbusRequest( void ); //update data view
@@ -124,6 +127,10 @@ private:
     MeteoTcpSock *m_meteo; //member for Meteostation
     QString m_meteo_ip;
     quint16 m_meteo_port;
+
+    Serinus     *m_serinus; //member for Serinus
+    QString m_serinus_ip;
+    quint16 m_serinus_port;
 
 private:
     void squeezeAlarmMsg();

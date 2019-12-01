@@ -29,6 +29,7 @@
 #include <QSqlField>
 
 #include <errno.h>
+#include <serinus.h>
 
 extern _App	*globalApp;
 
@@ -318,8 +319,35 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
 
     }
 
+    // Serinus init
+    //  -serinusip 192.168.1.101
+
+    m_serinus_ip = cmdline_args.value(cmdline_args.indexOf("-serinusip") +1);
+    if (m_serinus_ip == "")
+    {
+        qDebug ( "IP address of the Serinus is not set.");
+    }
+    else
+    {
+        m_serinus_port = cmdline_args.value(cmdline_args.indexOf("-serinusport") +1).toUShort();
+        if (m_serinus_port <= 0)
+        {
+            qDebug ( "Port of the Serinus is not set.");
+        }
+        else
+        {
+            m_serinus = new Serinus(this, &m_serinus_ip, &m_serinus_port);
+            connect(m_serinus, SIGNAL(dataIsReady(bool*, QMap<QString, float>*, QMap<QString, int>*)), this, SLOT(fillSensorData(bool*, QMap<QString, float>*, QMap<QString, int>*))); //fill several data to one sensor's base
+            //QObject::connect(m_serinus, SIGNAL(dataIsReady(const QString)), this, SLOT(test())); //fill several data to one sensor's base
+
+        }
+    }
 
 
+
+    //end of equipments init.
+
+    //timer initialization
     m_renovateTimer->start(420000); // every 7 minutes we set all slave ID to active mode for polling despite of really state
 
     QString polltime = cmdline_args.value(cmdline_args.indexOf("-polltime") +1);
@@ -347,7 +375,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     m_range->insert("CO", 10);
     m_range->insert("NO2", 1000);
     m_range->insert("NO", 1000);
-    m_range->insert("SO2", 1000);
+    m_range->insert("SO2", 10000);
     m_range->insert("H2S", 10000);
     m_range->insert("Пыль общая", 1000);
     m_range->insert("PM", 1000);
@@ -1142,7 +1170,7 @@ void processor::transactionDB(void)
         }
 
 
-        if (val != -1){
+        if ((val != -1)&& (m_measure->value(sensor.key()) > 0 )){
             //QSqlQuery query = QSqlQuery(*m_conn);
             query.prepare("INSERT INTO sensors_data (idd, serialnum, date_time, typemeasure, measure, is_alert) "
                           "VALUES (:idd, :serialnum, :date_time, :typemeasure, :measure, false)");
@@ -1326,6 +1354,42 @@ void processor::readSocketStatus()
 
     qDebug() << "Alarm messages is  "<< m_fire->surgardI->m_event->count();
 
+    // Read Serinus status
+    if (m_serinus->connected)
+        m_serinus->sendData(1, QByteArray(1, 50)); //primary gas response
 
+
+}
+
+void processor::fillSensorData( bool *_is_read, QMap<QString, float> *_measure, QMap<QString, int> *_sample)
+{
+    QMap<QString, float>::iterator sensor;
+
+
+
+    for (sensor = _measure->begin(); sensor != _measure->end(); ++sensor)
+    {
+        if (_sample->value(sensor.key())>0)
+        {
+            m_data->insert(sensor.key(), int(_measure->value(sensor.key()) * m_range->value(sensor.key())) + m_data->value(sensor.key()));
+            m_measure->insert(sensor.key(), m_measure->value(sensor.key()) + m_serinus->sample_t->value(sensor.key()));
+
+        }
+
+     //   m_data->insert("SO2", int(m_serinus->measure->value("SO2") * m_range->value("SO2")) + m_data->value("SO2"));
+      //  m_measure->insert("SO2", m_measure->value("SO2") + m_serinus->sample_t->value("SO2"));
+
+      //  m_data->insert("H2S", int(m_serinus->measure->value("H2S") * m_range->value("H2S")) + m_data->value("H2S"));
+     //   m_measure->insert("H2S", m_measure->value("H2S") + m_serinus->sample_t->value("H2S"));
+    *_is_read = true;
+
+    }
+}
+
+
+void processor::test()
+{
+    int i = 0;
+    i++;
 
 }

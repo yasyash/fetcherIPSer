@@ -28,7 +28,8 @@ SOURCES += \
         tcpsock.cpp\
         surgard.cpp\
         dusttcpsock.cpp \
-        meteotcpsock.cpp
+        meteotcpsock.cpp \
+    serinus.cpp
 
 HEADERS +=\
     3rdparty/qextserialport/qextserialport.h \
@@ -41,7 +42,8 @@ HEADERS +=\
     tcpsock.h\
     surgard.h\
     dusttcpsock.h \
-    meteotcpsock.h
+    meteotcpsock.h \
+    serinus.h
 
 
 INCLUDEPATH += 3rdparty/libmodbus \
