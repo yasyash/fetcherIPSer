@@ -34,7 +34,7 @@
 #include "dusttcpsock.h"
 #include "meteotcpsock.h"
 #include "serinus.h"
-
+#include "grimm.h"
 
 class processor : public QObject
 {
@@ -130,6 +130,10 @@ private:
     Serinus     *m_serinus; //member for Serinus
     QString m_serinus_ip;
     quint16 m_serinus_port;
+
+    Grimm *m_grimm; //member for Grimm
+    QString m_grimmport;
+
 
 private:
     void squeezeAlarmMsg();

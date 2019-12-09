@@ -1,5 +1,5 @@
 
-QT += core sql network concurrent
+QT += core sql network concurrent serialport
 QT -= gui
 
 TEMPLATE = app
@@ -29,7 +29,8 @@ SOURCES += \
         surgard.cpp\
         dusttcpsock.cpp \
         meteotcpsock.cpp \
-    serinus.cpp
+    serinus.cpp \
+    grimm.cpp
 
 HEADERS +=\
     3rdparty/qextserialport/qextserialport.h \
@@ -43,7 +44,8 @@ HEADERS +=\
     surgard.h\
     dusttcpsock.h \
     meteotcpsock.h \
-    serinus.h
+    serinus.h \
+    grimm.h
 
 
 INCLUDEPATH += 3rdparty/libmodbus \

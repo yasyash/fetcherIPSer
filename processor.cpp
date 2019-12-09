@@ -286,15 +286,35 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
         else
         {
             m_dust = new DustTcpSock(this, &m_dust_ip, &m_dust_port);
-            m_dust->sendData( "RDMN");
-            // while (!m_dust->is_read);
+            //m_dust->sendData( "RDMN");
+            /* while (!m_dust->is_read);*/
             m_dust->is_read = false;
-            m_dust->sendData( "MSTART");
-            //while (!m_dust->is_read);
-            m_dust->is_read = false;
+            //m_dust->sendData( "MSTART");
+            /*while (!m_dust->is_read);*/
+            //m_dust->is_read = false;
+
         }
 
     }
+
+    // EDM init for tty...
+
+    m_grimmport = cmdline_args.value(cmdline_args.indexOf("-grimmport") +1);
+    if (m_grimmport == "")
+    {
+        qDebug ("Error:  wrong data of the Grimm port parameter");
+
+    } else {
+
+        m_grimm = new Grimm(this, &m_grimmport);
+
+
+        connect(m_grimm, SIGNAL(dataIsReady(bool*, QMap<QString, float>*, QMap<QString, int>*)), this, SLOT(fillSensorData(bool*, QMap<QString, float>*, QMap<QString, int>*))); //fill several data to one sensor's base
+
+    }
+
+
+
 
     // Meteostation init
     //  -meteoip 192.168.1.200 -meteoport 22222
@@ -953,16 +973,21 @@ void processor::renovateSlaveID( void )
             m_pool->insert (j+1, numCoils); //renovate of registers quantity
         }
     }
+
+    if (!m_dust->connected){
     if ( (m_dust_ip != "") && (m_dust_port >0)){
         m_dust->~DustTcpSock();
         m_dust = new DustTcpSock(this, &m_dust_ip, &m_dust_port);
         m_dust->sendData( "MSTART"); //restart Dust measure equipment
     }
+    }
 
+    if (!m_meteo->connected){
     if ( (m_meteo_ip != "") && (m_meteo_port >0)){
 
         m_meteo->~MeteoTcpSock();
         m_meteo = new MeteoTcpSock(this, &m_meteo_ip, &m_meteo_port);
+    }
     }
 
     if ( (m_ups_ip != "") && (m_ups_port >0)){
@@ -970,6 +995,23 @@ void processor::renovateSlaveID( void )
         m_ups->err_count = 0;
     }
 
+    if (!m_serinus->connected)
+    {
+        if ( (m_serinus_ip != "") && (m_serinus_port >0)){
+
+            m_serinus->~Serinus();
+            m_serinus = new Serinus(this, &m_serinus_ip, &m_serinus_port);
+        }
+    }
+
+    if (!m_grimm->connected)
+    {
+        if ( (m_grimmport != "") ){
+
+            m_grimm->~Grimm();
+            m_grimm = new Grimm(this, &m_grimmport);
+        }
+    }
 
 }
 void processor::squeezeAlarmMsg()
@@ -1050,6 +1092,7 @@ void processor::transactionDB(void)
     QMap<QString, QUuid>::iterator sensor;
     QMap<QDateTime, QString>::iterator event_iterator;
     QMap<QString, float>::iterator meteo_iterator;
+    QString _key;
 
     QSqlQuery query = QSqlQuery(*m_conn);
 
@@ -1160,9 +1203,12 @@ void processor::transactionDB(void)
 
     for (sensor = m_uuid->begin(); sensor != m_uuid->end(); ++sensor)
     {
+        _key = sensor.key();
+
         if (sensor.key() == "Пыль общая")
         {
             val = m_data->value("PM", -1); //Hardcoded for Cyrillic name of Dust total
+            _key = "PM";
 
         } else {
 
@@ -1170,7 +1216,7 @@ void processor::transactionDB(void)
         }
 
 
-        if ((val != -1)&& (m_measure->value(sensor.key()) > 0 )){
+        if ((val != -1)&& (m_measure->value(_key) > 0 )){
             //QSqlQuery query = QSqlQuery(*m_conn);
             query.prepare("INSERT INTO sensors_data (idd, serialnum, date_time, typemeasure, measure, is_alert) "
                           "VALUES (:idd, :serialnum, :date_time, :typemeasure, :measure, false)");
@@ -1198,9 +1244,9 @@ void processor::transactionDB(void)
             query.bindValue(":date_time", tmp_time);
             query.bindValue(":typemeasure",sensor.key());
             query.bindValue(":measure", average );
-            qDebug() << "Transaction prepare: \n idd === "<< QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")) << "\n serial === " <<  QString(m_uuid->value(sensor.key()).toString()).remove(QRegExp("[\\{\\}]")) <<
+            qDebug() << "\nTransaction prepare: \n idd === "<< QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")) << "\n serial === " <<  QString(m_uuid->value(sensor.key()).toString()).remove(QRegExp("[\\{\\}]")) <<
                         "\n date_time ===" << QDateTime::currentDateTime().toString( "yyyy-MM-ddThh:mm:ss") << "\n typemeasure " <<  sensor.key() <<
-                        "\n measure ===" <<average;
+                        "\n measure ===" <<average << " and samples === " << m_measure->value(sensor.key(), 1);
             if (!m_conn->isOpen())
                 m_conn->open();
 
@@ -1291,7 +1337,7 @@ void processor::readSocketStatus()
 
     //Dust data reading
     if (m_dust->connected){
-        m_dust->sendData( "RMMEAS");
+        m_dust->sendData( "@");
         //while (!m_dust->is_read);
         m_dust->is_read = false;
         qDebug() << "count " << dust.length();
@@ -1363,7 +1409,15 @@ void processor::readSocketStatus()
         m_serinus->sendData(1, &ba);
 
     }
+    // Grimm data sending
+    /* if (m_grimm->connected)
+    {   QByteArray ba;
+        ba.resize(1);
+        ba[0] = 50;
+        ba[1] = 51;
+        m_serinus->sendData(1, &ba);
 
+    }*/
 
 }
 
@@ -1378,7 +1432,7 @@ void processor::fillSensorData( bool *_is_read, QMap<QString, float> *_measure, 
         if (_sample->value(sensor.key())>0)
         {
             m_data->insert(sensor.key(), int(_measure->value(sensor.key()) * m_range->value(sensor.key())) + m_data->value(sensor.key()));
-            m_measure->insert(sensor.key(), m_measure->value(sensor.key()) + m_serinus->sample_t->value(sensor.key()));
+            m_measure->insert(sensor.key(), m_measure->value(sensor.key()) + _sample->value(sensor.key()));
 
         }
 

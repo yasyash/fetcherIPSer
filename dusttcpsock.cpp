@@ -52,7 +52,7 @@ DustTcpSock::DustTcpSock(QObject *parent , QString *ip, quint16 *port) : QObject
     status = "";
     connected = m_sock->state();
 
-    qDebug() << "Dust measure equipment handling has been initialized.";
+    qDebug() << "Dust measure equipment handling via TCP/IP has been initialized.";
 
 }
 #endif
@@ -163,7 +163,7 @@ void DustTcpSock::readData()
             default: break;
         }
 
-        qDebug() << "Dust measure equipment data: " << data << " lenght - " << data.length() << " \n";
+        qDebug() << "Dust measure equipment via TCP/IP data: " << data << " lenght - " << data.length() << " \n";
 
         this->is_read = true;
 
@@ -218,11 +218,11 @@ void DustTcpSock::readData()
         char *str = (char*)(malloc(strlen(data) * sizeof(char) + 1));
         *str = '\0';
         strcat(str, data);
-        strcat(str,  "\r");
+        strcat(str,  "\r\n");
         qint64 lnt = qint64(strlen(str));
 
         lnt = m_sock->write(str, lnt);
-        // lnt = m_sock->flush();
+         lnt = m_sock->flush();
 
         qDebug()<< "Dust command: " << data ;
     }
