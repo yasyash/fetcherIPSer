@@ -975,19 +975,19 @@ void processor::renovateSlaveID( void )
     }
 
     if (!m_dust->connected){
-    if ( (m_dust_ip != "") && (m_dust_port >0)){
-        m_dust->~DustTcpSock();
-        m_dust = new DustTcpSock(this, &m_dust_ip, &m_dust_port);
-        m_dust->sendData( "MSTART"); //restart Dust measure equipment
-    }
+        if ( (m_dust_ip != "") && (m_dust_port >0)){
+            m_dust->~DustTcpSock();
+            m_dust = new DustTcpSock(this, &m_dust_ip, &m_dust_port);
+            m_dust->sendData( "MSTART"); //restart Dust measure equipment
+        }
     }
 
     if (!m_meteo->connected){
-    if ( (m_meteo_ip != "") && (m_meteo_port >0)){
+        if ( (m_meteo_ip != "") && (m_meteo_port >0)){
 
-        m_meteo->~MeteoTcpSock();
-        m_meteo = new MeteoTcpSock(this, &m_meteo_ip, &m_meteo_port);
-    }
+            m_meteo->~MeteoTcpSock();
+            m_meteo = new MeteoTcpSock(this, &m_meteo_ip, &m_meteo_port);
+        }
     }
 
     if ( (m_ups_ip != "") && (m_ups_port >0)){
@@ -1001,16 +1001,22 @@ void processor::renovateSlaveID( void )
 
             m_serinus->~Serinus();
             m_serinus = new Serinus(this, &m_serinus_ip, &m_serinus_port);
+            connect(m_serinus, SIGNAL(dataIsReady(bool*, QMap<QString, float>*, QMap<QString, int>*)), this, SLOT(fillSensorData(bool*, QMap<QString, float>*, QMap<QString, int>*))); //fill several data to one sensor's base
+
         }
     }
 
-    if (!m_grimm->connected)
-    {
-        if ( (m_grimmport != "") ){
+    //if (!m_grimm->connected)
+    //{
+    if ( (m_grimmport != "") ){
 
-            m_grimm->~Grimm();
-            m_grimm = new Grimm(this, &m_grimmport);
-        }
+        m_grimm->reOpen();
+        //m_grimm->~Grimm();
+        //m_grimm = new Grimm(this, &m_grimmport);
+        //connect(m_grimm, SIGNAL(dataIsReady(bool*, QMap<QString, float>*, QMap<QString, int>*)), this, SLOT(fillSensorData(bool*, QMap<QString, float>*, QMap<QString, int>*))); //fill several data to one sensor's base
+
+
+        //  }
     }
 
 }
@@ -1431,7 +1437,7 @@ void processor::fillSensorData( bool *_is_read, QMap<QString, float> *_measure, 
     {
         if (_sample->value(sensor.key())>0)
         {
-            m_data->insert(sensor.key(), int(_measure->value(sensor.key()) * m_range->value(sensor.key())) + m_data->value(sensor.key()));
+            m_data->insert(sensor.key(), int(_measure->value(sensor.key()) *m_range->value(sensor.key())) + m_data->value(sensor.key()));
             m_measure->insert(sensor.key(), m_measure->value(sensor.key()) + _sample->value(sensor.key()));
 
         }

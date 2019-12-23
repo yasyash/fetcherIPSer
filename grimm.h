@@ -35,7 +35,7 @@ public:
     virtual ~Grimm();
 
     void sendData(QByteArray *data);
-
+    void reOpen();
 
 protected:
 
@@ -52,7 +52,7 @@ signals:
 
 private:
 
-  QSerialPort  *m_rs232;
+  QSerialPort  *m_rs232 = nullptr;
   QByteArray *_buffer;
 
 public:

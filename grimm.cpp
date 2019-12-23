@@ -22,11 +22,10 @@
 
 Grimm::Grimm(QObject *parent, QString *device,
              int baud , int parity , int data_bits ,
-             int stop_bits ) : QObject (parent)
+             int stop_bits ) : QObject (parent), m_rs232( new QSerialPort(this))
 
 {
 
-    m_rs232 = new QSerialPort(this);
 
     m_rs232->setPortName(*device);
     m_rs232->setBaudRate(baud);
@@ -73,7 +72,7 @@ Grimm::Grimm(QObject *parent, QString *device,
     {
         QByteArray _byte;
         _byte.resize(1);
-        _byte[0] = 82; //"R" command
+        _byte[0] = 82; //"R" command for start measure
         sendData( &_byte);
 
     }
@@ -86,8 +85,42 @@ Grimm::~Grimm()
 {
     if (m_rs232->isOpen())
         m_rs232->close();
+    //m_rs232->~QSerialPort();
+
+
+
 }
 
+void Grimm::reOpen()
+{
+    if(!m_rs232->isOpen())
+    {
+        m_rs232->setPortName(m_rs232->portName());
+        m_rs232->setBaudRate(m_rs232->baudRate());
+        m_rs232->setDataBits(m_rs232->dataBits());
+        m_rs232->setParity(m_rs232->parity());
+        m_rs232->setStopBits(m_rs232->stopBits());
+        m_rs232->setFlowControl(QSerialPort::SoftwareControl);
+
+        if (m_rs232->open(QIODevice::ReadWrite)) {
+            connected = m_rs232->isOpen();
+        } else {
+            displayError(m_rs232->error());
+
+        }
+    }
+
+    if (connected)
+    {
+        QByteArray _byte;
+        _byte.resize(1);
+        _byte[0] = 82; //"R" command for start measure
+        sendData( &_byte);
+
+    }
+    _buffer->clear();
+    is_read = false;
+}
 
 
 void Grimm::readData()
@@ -116,6 +149,7 @@ void Grimm::readData()
     }
 
     _buffer->append(data); //filling all data fragments
+    //_buffer->replace(QByteArray("\x0"), QByteArray("\x20"));//replace /0 character
 
     list = QString(*_buffer).simplified().split(QRegExp("[\x20{\x20}]"));
 
@@ -169,8 +203,9 @@ void Grimm::readData()
 void Grimm::displayError(QSerialPort::SerialPortError error)
 {
 
-    qDebug()<< ("Dust measure equipment USB port error: ") << m_rs232->errorString();
     if (error == QSerialPort::ResourceError) {
+        qDebug()<< ("Dust measure equipment USB port error: ") << m_rs232->errorString();
+
         if (m_rs232->isOpen())
         {
             m_rs232->close();
@@ -178,7 +213,6 @@ void Grimm::displayError(QSerialPort::SerialPortError error)
         }
 
     }
-
 
 
 }

@@ -193,7 +193,8 @@ void DustTcpSock::readData()
             qDebug()<< ("Dust measure equipment handling error: ") << (m_sock->errorString());
         }
 
-        m_sock->close();
+        if (m_sock->isOpen())
+            m_sock->close();
         connected = m_sock->state();
 
     }
