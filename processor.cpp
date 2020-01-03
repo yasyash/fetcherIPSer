@@ -240,9 +240,9 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
 
 
 
-    slaveID = new QVector<bool>(16, true); //max slaveID number is hardcoded to 16 devices
-    q_poll = new uint8_t[15];
-    memset(q_poll, 24, 16);
+    slaveID = new QVector<bool>(30, true); //max slaveID number is hardcoded to 30 devices
+    q_poll = new uint8_t[29];
+    memset(q_poll, 24, 30);
     m_uuid = new  QMap<QString, QUuid>;
     m_data = new  QMap<QString, int>;
     m_measure =  new QMap<QString, int>;
@@ -979,7 +979,7 @@ void processor::setStatusError(const QString &msg)
 
 void processor::renovateSlaveID( void )
 {
-    memset(q_poll, 24, 16);
+    memset(q_poll, 24, 30);
     for( int j = 0; j < slaveID->size(); ++j )
     {
         if (!slaveID->value(j))
