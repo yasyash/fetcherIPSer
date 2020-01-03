@@ -397,12 +397,16 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     m_range->insert("NO", 1000);
     m_range->insert("SO2", 1000000);
     m_range->insert("H2S", 1000000);
+    m_range->insert("CH2O", 1000);
+    m_range->insert("O3", 1000);
+
     m_range->insert("Пыль общая", 1000);
     m_range->insert("PM", 1000);
     m_range->insert("PM1", 1000);
     m_range->insert("PM2.5", 1000);
     m_range->insert("PM4", 1000);
     m_range->insert("PM10", 1000);
+
     m_range->insert("Ресурс сенс. NO", 1);
     m_range->insert("Ресурс сенс. H2S", 1);
     m_range->insert("Напряжение мин.", 1);
@@ -656,23 +660,34 @@ void processor::sendModbusRequest( void )
 
                             uint8_t _type = (data >> 8) & 0xF;
 
-                            if (_type == 2){ name = "CO"; //detect type of sensor HARDCODED
+                            if (_type == 2){ name = "CO"; //detect type of a sensor HARDCODED for OPTEC's equipments
                                 if (_mode == 2) md = "fault";
                                 else
                                 {md = (_mode ?  "off" :  "measuring");};
                             }
-                            if (_type == 4){ name = "NO2"; //detect type of sensor HARDCODED
+                            if (_type == 4){ name = "NO2"; //detect type of a sensor HARDCODED
                                 if (_mode == 7) md = "change sensor";
                                 else
                                 {md = (_mode ?  "off" :  "measuring");};
                             }
 
-                            if (_type == 6){ name = "SO2"; //detect type of sensor HARDCODED
+                            if (_type == 6){ name = "SO2"; //detect type of a sensor HARDCODED
                                 if (_mode == 7) md = "change sensor";
                                 else
                                 {md = (_mode ?  "off" :  "measuring");};
                             }
 
+                            if ((_type == 2) && (*dest16 == 30)){ name = "CH2O"; //hardcoded for the Fort measure equipment address = 30 (or OPTEC's equipments)
+                                if (_mode == 2) md = "fault";
+                                else
+                                {md = (_mode ?  "off" :  "measuring");};
+                            }
+
+                            if (_type == 1){ name = "O3"; //detect type of a sensor HARDCODED for OPTEC's equipments
+                                if (_mode == 2) md = "fault";
+                                else
+                                {md = (_mode ?  "off" :  "measuring");};
+                            }
 
                             tmp_type_measure = name;
 
