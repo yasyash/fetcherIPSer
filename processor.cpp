@@ -399,6 +399,8 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     m_range->insert("H2S", 1000000);
     m_range->insert("CH2O", 1000);
     m_range->insert("O3", 1000);
+    m_range->insert("NH3", 1000);
+
 
     m_range->insert("Пыль общая", 1000);
     m_range->insert("PM", 1000);
@@ -411,6 +413,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     m_range->insert("Ресурс сенс. H2S", 1);
     m_range->insert("Напряжение мин.", 1);
     m_range->insert("Напряжение макс.", 1);
+
 
 
     //UPS data init
@@ -729,19 +732,25 @@ void processor::sendModbusRequest( void )
                             {md = (_mode ?  "off" :  "measuring");};
 
                             uint8_t _type = (data >> 8) & 0xF;
+                            if (_type != 0){
+                                if (_type == 7){ name = "NO"; //detect type of sensor HARDCODED
+                                    if (_mode == 7) md = "change sensor";
+                                    else
+                                    {md = (_mode ?  "off" :  "measuring");};
+                                }
 
-                            if (_type == 7){ name = "NO"; //detect type of sensor HARDCODED
-                                if (_mode == 7) md = "change sensor";
-                                else
-                                {md = (_mode ?  "off" :  "measuring");};
+                                if (_type == 3){ name = "H2S"; //detect type of sensor HARDCODED
+                                    if (_mode == 7) md = "change sensor";
+                                    else
+                                    {md = (_mode ?  "off" :  "measuring");};
+                                }
+                            } else {
+
+                                _type = (data ) & 0xF; //in case of only one byte for some equipments
+                                if (_type == 7){ name = "NO"; //detect type of sensor HARDCODED
+
+                                }
                             }
-
-                            if (_type == 3){ name = "H2S"; //detect type of sensor HARDCODED
-                                if (_mode == 7) md = "change sensor";
-                                else
-                                {md = (_mode ?  "off" :  "measuring");};
-                            }
-
 
                             tmp_type_measure = name;
 
@@ -776,31 +785,83 @@ void processor::sendModbusRequest( void )
                         }
 
                         case 5:{
-                            QString result, str;
+                            QString result, str, md, name;
                             int tmp, cnt;
+                            uint8_t _mode = data & 0xFF;
 
                             QTextStream(&result) << float (data) << " %";
 
+                            if (i < slave.value()-1){ // resourse sensor detection - last register if it's true
 
+                                if (_mode == 2) md = "fault";
+                                else
+                                {md = (_mode ?  "off" :  "measuring");};
 
-                            str = "Ресурс сенс. " % tmp_type_measure;
-                            tmp = m_data->value(str, -1); //detect first measure
+                                uint8_t _type = (data >> 8) & 0xF;
+                                if (_type != 0){
+                                    if (_type == 1){ name = "NH3"; //detect type of sensor HARDCODED
+                                        if (_mode == 7) md = "change sensor";
+                                        else
+                                        {md = (_mode ?  "off" :  "measuring");};
+                                    }
+                                } else{
+                                    _type = (data ) & 0xF; //in case of only one byte for some equipments
+                                    if (_type == 1){ name = "NH3"; //detect type of sensor HARDCODED
 
-                            if ( tmp == -1){
+                                    }
+                                }
+                                tmp_type_measure = name;
 
-                                m_data->insert(str, QString::number(data, 16).toInt()); // insert into QMap ordering pair of measure first time
-                                m_measure->insert(str, 1);
-                                qDebug() << "measure... \n type= " << str << " value = " << (float)QString::number(data, 16).toInt() << " %";
+                                uint8_t _number = (data >> 12) & 0xF;
+                                QTextStream(&result) << name << " : " << md << " : " << _number;
+                                qDebug() << result;
 
                             } else {
-                                m_data->insert(str, tmp + QString::number(data, 16).toInt());
-                                cnt = m_measure->value(str, 0);
-                                m_measure->insert(str, cnt+1);
-                                qDebug()<<  "measure... \n type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt() << " %";
+
+
+
+                                str = "Ресурс сенс. " % tmp_type_measure;
+                                tmp = m_data->value(str, -1); //detect first measure
+
+                                if ( tmp == -1){
+
+                                    m_data->insert(str, QString::number(data, 16).toInt()); // insert into QMap ordering pair of measure first time
+                                    m_measure->insert(str, 1);
+                                    qDebug() << "measure... \n type= " << str << " value = " << (float)QString::number(data, 16).toInt() << " %";
+
+                                } else {
+                                    m_data->insert(str, tmp + QString::number(data, 16).toInt());
+                                    cnt = m_measure->value(str, 0);
+                                    m_measure->insert(str, cnt+1);
+                                    qDebug()<<  "measure... \n type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt() << " %";
+
+                                }
+                            }
+                            break;
+                        }
+                        case 6:{
+                            QString result;
+                            int tmp, cnt;
+
+                            QTextStream(&result) << float (data)/m_range->value(tmp_type_measure) << " mg/m3";
+
+
+                            tmp = m_data->value(tmp_type_measure, -1); //detect first measure
+                            if ( tmp == -1){
+                                m_data->insert(tmp_type_measure, QString::number(data, 16).toInt()); // insert into QMap ordering pair of measure first time
+                                m_measure->insert(tmp_type_measure, 1);
+                                qDebug() << "measure... \n type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt()/m_range->value(tmp_type_measure);
+
+                            } else {
+                                m_data->insert(tmp_type_measure, tmp + QString::number(data, 16).toInt() );
+                                cnt = m_measure->value(tmp_type_measure, 0);
+                                m_measure->insert(tmp_type_measure, cnt+1);
+                                qDebug()<<  "measure... \n type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt()/m_range->value(tmp_type_measure);
 
                             }
                             break;
                         }
+
                         default:
                             break;
                         }
