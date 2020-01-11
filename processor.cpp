@@ -130,6 +130,63 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
         releaseModbus();
 
         qDebug ( "Fatal error: could not connect serial port");
+        m_conn = new QSqlDatabase();
+        *m_conn = QSqlDatabase::addDatabase("QPSQL");
+        m_conn->setHostName("localhost");
+
+        QString db = cmdline_args.value(cmdline_args.indexOf("-db") +1);
+        if (db == "")
+        {
+
+            qDebug ( "Fatal error: wrong data of the database parameter");
+
+        }
+
+        QString user = cmdline_args.value(cmdline_args.indexOf("-user") +1);
+        if (user == "")
+        {
+
+            qDebug ( "Fatal error: wrong data of the user parameter");
+
+        }
+
+        QString pw = cmdline_args.value(cmdline_args.indexOf("-pwd") +1);
+        if (pw == "")
+        {
+
+            qDebug ( "Fatal error: wrong data of the password parameter");
+
+        }
+
+        m_conn->setDatabaseName(db);
+        m_conn->setUserName(user);
+        m_conn->setPassword(pw);
+
+
+        bool status = m_conn->open();
+        if (status)
+        {
+            QSqlQuery query_log = QSqlQuery(*m_conn);
+            query_log.prepare("INSERT INTO logs (date_time, type, descr ) "
+                              "VALUES ( :date_time, :type, :descr)");
+            query_log.bindValue(":date_time", QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss") );
+            query_log.bindValue( ":type", 500 );
+
+            QSqlQuery *query= new QSqlQuery ("select * from stations where is_present = 'true'", *m_conn);
+            query->first();
+            QSqlRecord rec = query->record();
+
+            m_uuidStation  = new QUuid(rec.field("idd").value().toUuid());
+            QString _str = QString("Фатальная ошибка на посту наблюдения ") + rec.field("namestation").value().toString()+QString("   ") + QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")) + QString("      Интерфейс RS-485 (Moxa) не отвечает - сервис сбора остановлен!!!");
+            query_log.bindValue(":descr", _str  );
+            query_log.exec();
+
+            query_log.finish();
+            m_conn->close();
+        }
+
+
+
         exit(-1);
 
 
@@ -1177,11 +1234,16 @@ void processor::transactionDB(void)
     QString _key;
 
     QSqlQuery query = QSqlQuery(*m_conn);
+    QSqlQuery query_log = QSqlQuery(*m_conn);
 
 
     int val;
     float average;
-    QString tmp_time = QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss"); //all SQL INSERT should be in same time
+    QString tmp_time = QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss"); //all SQL INSERTs should be at the same time
+
+    //prepare for trouble logging
+    query_log.prepare("INSERT INTO logs (date_time, type, descr ) "
+                      "VALUES ( :date_time, :type, :descr)");
 
     //Alarm data reading and filtering
 
@@ -1237,7 +1299,7 @@ void processor::transactionDB(void)
                       "VALUES (:station, :date_time, :bar, :temp_in, :hum_in, :temp_out, :hum_out, :speed_wind, :dir_wind, :dew_pt, :heat_indx, :chill_wind, :thsw_indx, :rain, :rain_rate, :uv_indx, :rad_solar, :et)");
 
         query.bindValue(":station", QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")));
-        query.bindValue(":date_time", QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss"));
+        query.bindValue(":date_time", tmp_time);
 
         for (meteo_iterator = m_meteo->measure->begin(); meteo_iterator != m_meteo->measure->end(); ++meteo_iterator)
         {
@@ -1279,6 +1341,20 @@ void processor::transactionDB(void)
 
         m_meteo->measure->clear();
         m_meteo->sample_t = 0;
+    } else {
+        query_log.bindValue(":date_time", tmp_time );
+        query_log.bindValue( ":type", 404 );
+        query_log.bindValue(":descr", "Метеокомплекс на посту  " + QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")) + "  не отвечает..."  );
+
+        query_log.exec();
+       // qDebug() << "Transaction status to the meteostation's table is " << ((query_log.exec() == true) ? "successful!" :  "not complete!");
+       // qDebug() << "The last error is " << (( query_log.lastError().text().trimmed() == "") ? "absent" : query_log.lastError().text());
+
+
+
+
+
+
     }
 
     //Sensor data processing
@@ -1364,10 +1440,23 @@ void processor::transactionDB(void)
 
             }
         }
+        else { //logging error
+
+            if ((val == -1)) {//if measure is absend
+
+                query_log.bindValue(":date_time", tmp_time );
+                query_log.bindValue( ":type", 404 );
+                query_log.bindValue(":descr", "Сенсор " + _key + "     " + QString(m_uuid->value(sensor.key()).toString()).remove(QRegExp("[\\{\\}]"))+"  на посту " + QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")) + " не отвечает..."  );
+
+                 query_log.exec();
+                 }
+
+        }
 
 
     }
-
+    query_log.finish();
+    query.finish();
     m_data->clear();
     m_measure->clear();
 
