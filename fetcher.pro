@@ -3,7 +3,7 @@ QT += core sql network concurrent serialport
 QT -= gui
 
 TEMPLATE = app
-VERSION = 0.1.0
+VERSION = 0.1.7
 
 TARGET = fetcher
 
@@ -30,7 +30,11 @@ SOURCES += \
         dusttcpsock.cpp \
         meteotcpsock.cpp \
     serinus.cpp \
-    grimm.cpp
+    grimm.cpp \
+    soap/soapWSHttpBinding_USCOREIAutoChromWCFHostProxy.cpp \
+    soap/soapC.cpp \
+    soap/stdsoap2.cpp \
+    liga_ac.cpp
 
 HEADERS +=\
     3rdparty/qextserialport/qextserialport.h \
@@ -45,7 +49,14 @@ HEADERS +=\
     dusttcpsock.h \
     meteotcpsock.h \
     serinus.h \
-    grimm.h
+    grimm.h \
+    soap/soapWSHttpBinding_USCOREIAutoChromWCFHostProxy.h \
+    soap/soapStub.h \
+    soap/soapH.h \
+    soap/stdsoap2.h \
+    soap/soap12.h \
+    soap/WSHttpBinding_USCOREIAutoChromWCFHost.nsmap \
+    liga_ac.h
 
 
 INCLUDEPATH += 3rdparty/libmodbus \

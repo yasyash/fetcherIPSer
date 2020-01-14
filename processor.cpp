@@ -420,7 +420,29 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
         }
     }
 
+    // ACA-Liga init
+    //  -ligaip 192.168.1.111 -ligaport 7120
 
+    m_liga_ip = cmdline_args.value(cmdline_args.indexOf("-ligaip") +1);
+    if (m_liga_ip == "")
+    {
+        qDebug ( "IP address of the ACA-Liga is not set.");
+    }
+    else
+    {
+        m_liga_port = cmdline_args.value(cmdline_args.indexOf("-ligaport") +1).toUShort();
+        if (m_liga_port <= 0)
+        {
+            qDebug ( "Port of the ACA-Liga is not set.");
+        }
+        else
+        {
+            m_liga = new liga_ac(this, &m_liga_ip, &m_liga_port);
+            connect(m_liga, SIGNAL(dataIsReady(bool*, QMap<QString, float>*, QMap<QString, int>*)), this, SLOT(fillSensorData(bool*, QMap<QString, float>*, QMap<QString, int>*))); //fill several data to one sensor's base
+            //QObject::connect(m_serinus, SIGNAL(dataIsReady(const QString)), this, SLOT(test())); //fill several data to one sensor's base
+
+        }
+    }
 
     //end of equipments init.
 
