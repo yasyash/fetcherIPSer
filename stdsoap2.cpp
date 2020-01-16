@@ -6187,7 +6187,7 @@ tcp_select(struct soap *soap, SOAP_SOCKET sk, int flags, int timeout)
   /* if fd max set size exceeded, use poll() when available */
   if ((int)sk >= (int)FD_SETSIZE)
 #endif
-#ifdef HAVE_POLL
+#ifdef HAVE_POLL_SOAP
   {
 #ifdef WITH_SELF_PIPE
     struct pollfd pollfd[2];
@@ -12829,7 +12829,7 @@ soap_strrchr(const char *s, int t)
 
 /******************************************************************************/
 
-#ifndef HAVE_STRTOL
+#ifndef HAVE_STRTOL_SOAP
 SOAP_FMAC1
 long
 SOAP_FMAC2
@@ -12895,7 +12895,7 @@ soap_strtol(const char *s, char **t, int b)
 
 /******************************************************************************/
 
-#ifndef HAVE_STRTOUL
+#ifndef HAVE_STRTOUL_SOAP
 SOAP_FMAC1
 unsigned long
 SOAP_FMAC2
@@ -16872,7 +16872,7 @@ soap_s2unsignedInt(struct soap *soap, const char *s, unsigned int *p)
 #endif
     )
       soap->error = SOAP_TYPE;
-#ifdef HAVE_STRTOUL
+#ifdef HAVE_STRTOUL_SOAP
     if (*p > 0 && strchr(s, '-'))
       return soap->error = SOAP_TYPE;
 #endif
@@ -16971,7 +16971,7 @@ soap_s2unsignedLong(struct soap *soap, const char *s, unsigned long *p)
 #endif
     )
       soap->error = SOAP_TYPE;
-#ifdef HAVE_STRTOUL
+#ifdef HAVE_STRTOUL_SOAP
     if (*p > 0 && strchr(s, '-'))
       return soap->error = SOAP_TYPE;
 #endif
@@ -18315,7 +18315,7 @@ soap_dateTime2s(struct soap *soap, time_t n)
   if (pT)
     l = strftime(soap->tmpbuf, sizeof(soap->tmpbuf), "%Y-%m-%dT%H:%M:%SZ", pT);
 #elif (defined(HAVE_TM_GMTOFF) || defined(HAVE_STRUCT_TM_TM_GMTOFF) || defined(HAVE_STRUCT_TM___TM_GMTOFF)) && !defined(WITH_NOZONE)
-#if defined(HAVE_LOCALTIME_R)
+#if defined(HAVE_LOCALTIME_R_SOAP)
   if (localtime_r(&n, pT) != SOAP_FUNC_R_ERR)
   {
     l = strftime(soap->tmpbuf, sizeof(soap->tmpbuf), "%Y-%m-%dT%H:%M:%S%z", pT);
@@ -18337,8 +18337,8 @@ soap_dateTime2s(struct soap *soap, time_t n)
     }
   }
 #endif
-#elif defined(HAVE_GETTIMEOFDAY) && !defined(WITH_NOZONE)
-#if defined(HAVE_LOCALTIME_R)
+#elif defined(HAVE_GETTIMEOFDAY_SOAP) && !defined(WITH_NOZONE)
+#if defined(HAVE_LOCALTIME_R_SOAP)
   if (localtime_r(&n, pT) != SOAP_FUNC_R_ERR)
   {
     struct timeval tv;
@@ -18363,7 +18363,7 @@ soap_dateTime2s(struct soap *soap, time_t n)
   }
 #endif
 #elif defined(HAVE_FTIME) && !defined(WITH_NOZONE)
-#if defined(HAVE_LOCALTIME_R)
+#if defined(HAVE_LOCALTIME_R_SOAP)
   if (localtime_r(&n, pT) != SOAP_FUNC_R_ERR)
   {
     struct timeb t;
@@ -18393,7 +18393,7 @@ soap_dateTime2s(struct soap *soap, time_t n)
       (SOAP_SNPRINTF(soap->tmpbuf + l, sizeof(soap->tmpbuf) - l, 7), "%+03d:%02d", -t.timezone/60+(pT->tm_isdst!=0), abs(t.timezone)%60);
   }
 #endif
-#elif defined(HAVE_LOCALTIME_R)
+#elif defined(HAVE_LOCALTIME_R_SOAP)
   if (localtime_r(&n, pT) != SOAP_FUNC_R_ERR)
     l = strftime(soap->tmpbuf, sizeof(soap->tmpbuf), "%Y-%m-%dT%H:%M:%S", pT);
 #else
@@ -19641,7 +19641,7 @@ soap_rand_uuid(struct soap *soap, const char *prefix)
   static int k = 0xFACEB00C;
   int lo = k % 127773;
   int hi = k / 127773;
-# if defined(HAVE_GETTIMEOFDAY)
+# if defined(HAVE_GETTIMEOFDAY_SOAP)
   struct timeval tv;
   gettimeofday(&tv, NULL);
   r1 = 10000000 * tv.tv_sec + tv.tv_usec;

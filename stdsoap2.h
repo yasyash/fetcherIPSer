@@ -237,24 +237,24 @@ A commercial use license is available from Genivia, Inc., contact@genivia.com
 #  define SOAP_MAXDIMS (4)
 #  define HAVE_SSCANF
 # elif defined(CYGWIN)
-#  define HAVE_POLL
-#  define HAVE_SNPRINTF
+#  define HAVE_POLL_SOAP
+#  define HAVE_SNPRINTF_SOAP
 #  define HAVE_STRRCHR
 #  define HAVE_STRTOD
 #  define HAVE_SSCANF
-#  define HAVE_STRTOL
-#  define HAVE_STRTOUL
-#  define HAVE_SYS_TIMEB_H
+#  define HAVE_STRTOL_SOAP
+#  define HAVE_STRTOUL_SOAP
+#  define HAVE_SYS_TIMEB_H_SOAP
 #  define HAVE_FTIME
 #  define HAVE_RAND_R
 #  define HAVE_GMTIME_R
 #  define HAVE_ASCTIME_R
-#  define HAVE_LOCALTIME_R
+#  define HAVE_LOCALTIME_R_SOAP
 #  define HAVE_STRERROR_R
 #  define HAVE_WCTOMB
 #  define HAVE_MBTOWC
 #  define HAVE_INTTYPES_H
-#  define HAVE_LOCALE_H
+#  define HAVE_LOCALE_H_SOAP
 # elif defined(WIN32)
 #  ifdef __BORLANDC__
 #   ifdef __clang__
@@ -262,8 +262,8 @@ A commercial use license is available from Genivia, Inc., contact@genivia.com
 #    define HAVE_STRTOD
 #    define HAVE_SSCANF
 #    define HAVE_STRTOD_L
-#    define HAVE_STRTOL
-#    define HAVE_SYS_TIMEB_H
+#    define HAVE_STRTOL_SOAP
+#    define HAVE_SYS_TIMEB_H_SOAP
 #    define HAVE_FTIME
 #    define HAVE_GMTIME
 #    define HAVE_WCTOMB
@@ -275,8 +275,8 @@ A commercial use license is available from Genivia, Inc., contact@genivia.com
 #    define HAVE_STRTOD
 #    define HAVE_SSCANF
 #    define HAVE_STRTOD_L
-#    define HAVE_STRTOL
-#    define HAVE_SYS_TIMEB_H
+#    define HAVE_STRTOL_SOAP
+#    define HAVE_SYS_TIMEB_H_SOAP
 #    define HAVE_FTIME
 #    define HAVE_GMTIME
 #    define HAVE_WCTOMB
@@ -286,81 +286,81 @@ A commercial use license is available from Genivia, Inc., contact@genivia.com
 #   endif
 #  else
 #   if _MSC_VER >= 1400
-#    define HAVE_SNPRINTF
+#    define HAVE_SNPRINTF_SOAP
 #   endif
 #   define HAVE_STRRCHR
 #   define HAVE_STRTOD
 #   define HAVE_SSCANF
 #   define HAVE_STRTOD_L
-#   define HAVE_STRTOL
-#   define HAVE_STRTOUL
+#   define HAVE_STRTOL_SOAP
+#   define HAVE_STRTOUL_SOAP
 #   if _MSC_VER >= 1300
 #    define HAVE_STRTOLL         /* use _strtoi64 */
-#    define HAVE_STRTOULL        /* use _strtoui64 */
+#    define HAVE_STRTOULL_SOAP        /* use _strtoui64 */
 #   endif
-#   define HAVE_SYS_TIMEB_H
+#   define HAVE_SYS_TIMEB_H_SOAP
 #   define HAVE_FTIME
 #   define HAVE_GMTIME
 #   define HAVE_WCTOMB
 #   define HAVE_MBTOWC
 #   define SOAP_LONG_FORMAT "%I64d"
 #   define SOAP_ULONG_FORMAT "%I64u"
-#   define HAVE_LOCALE_H
+#   define HAVE_LOCALE_H_SOAP
 #  endif
 # elif defined(__APPLE__)
-#  define HAVE_POLL
-#  define HAVE_SNPRINTF
+#  define HAVE_POLL_SOAP
+#  define HAVE_SNPRINTF_SOAP
 #  define HAVE_STRLCPY
 #  define HAVE_STRRCHR
 #  define HAVE_STRTOD
 #  define HAVE_SSCANF
 #  define HAVE_STRTOD_L
 #  define HAVE_SSCANF_L
-#  define HAVE_STRTOL
-#  define HAVE_STRTOUL
+#  define HAVE_STRTOL_SOAP
+#  define HAVE_STRTOUL_SOAP
 #  define HAVE_STRTOLL
-#  define HAVE_STRTOULL
+#  define HAVE_STRTOULL_SOAP
 #  define HAVE_RAND_R
 #  define HAVE_GMTIME_R
 #  define HAVE_ASCTIME_R
 #  define HAVE_TM_GMTOFF
-#  define HAVE_GETTIMEOFDAY
-#  define HAVE_LOCALTIME_R
+#  define HAVE_GETTIMEOFDAY_SOAP
+#  define HAVE_LOCALTIME_R_SOAP
 #  define HAVE_STRERROR_R
 #  define HAVE_TIMEGM
 #  define HAVE_WCTOMB
 #  define HAVE_MBTOWC
 #  define HAVE_INTTYPES_H
-#  define HAVE_LOCALE_H
+#  define HAVE_LOCALE_H_SOAP
 #  define HAVE_XLOCALE_H
 #  define HAVE_RANDOM
 # elif defined(_AIX43)
-#  define HAVE_SNPRINTF
+#  define HAVE_SNPRINTF_SOAP
 #  define HAVE_STRRCHR
 #  define HAVE_STRTOD
 #  define HAVE_SSCANF
-#  define HAVE_STRTOL
-#  define HAVE_STRTOUL
-#  define HAVE_SYS_TIMEB_H
+#  define HAVE_STRTOL_SOAP
+#  define HAVE_STRTOUL_SOAP
+#  define HAVE_SYS_TIMEB_H_SOAP
 #  define HAVE_FTIME
 #  define HAVE_RAND_R
 #  define HAVE_GMTIME_R
 #  define HAVE_ASCTIME_R
-#  define HAVE_LOCALTIME_R
+#  define HAVE_LOCALTIME_R_SOAP
 #  define HAVE_WCTOMB
 #  define HAVE_MBTOWC
-#  define HAVE_LOCALE_H
+#  define HAVE_LOCALE_H_SOAP
 # elif defined(_AIX41)
-#  define HAVE_SNPRINTF
+#  define HAVE_SNPRINTF_SOAP
 #  define HAVE_STRRCHR
 #  define HAVE_STRTOD
 #  define HAVE_SSCANF
-#  define HAVE_STRTOL
-#  define HAVE_STRTOUL
-#  define HAVE_SYS_TIMEB_H
+#  define HAVE_STRTOL_SOAP
+#  define HAVE_STRTOUL_SOAP
+#  define HAVE_SYS_TIMEB_H_SOAP
 #  define HAVE_WCTOMB
 #  define HAVE_MBTOWC
-#  define HAVE_LOCALE_H
+#  define HAVE_LOCALE_H_SOAP
 # elif defined(HP_UX)
 #  include <sys/_inttypes.h>
 #  if 0 /* enable if __strtoll and __strtoull are available */
@@ -369,42 +369,42 @@ extern intmax_t __strtoull(const char*, char**, int);
 #  define strtoll __strtoll
 #  define strtoull __strtoull
 #  endif
-#  define HAVE_SNPRINTF
+#  define HAVE_SNPRINTF_SOAP
 #  define HAVE_STRRCHR
 #  define HAVE_STRTOD
 #  define HAVE_SSCANF
-#  define HAVE_STRTOL
-#  define HAVE_STRTOUL
+#  define HAVE_STRTOL_SOAP
+#  define HAVE_STRTOUL_SOAP
 #  define HAVE_STRTOLL
-#  define HAVE_STRTOULL
-#  define HAVE_SYS_TIMEB_H
+#  define HAVE_STRTOULL_SOAP
+#  define HAVE_SYS_TIMEB_H_SOAP
 #  define HAVE_FTIME
 #  define HAVE_RAND_R
 #  define HAVE_GMTIME_R
 #  define HAVE_ASCTIME_R
-#  define HAVE_LOCALTIME_R
+#  define HAVE_LOCALTIME_R_SOAP
 #  define HAVE_WCTOMB
 #  define HAVE_MBTOWC
 #  define HAVE_ISNAN
-#  define HAVE_LOCALE_H
+#  define HAVE_LOCALE_H_SOAP
 # elif defined(FREEBSD) || defined(__FreeBSD__) || defined(OPENBSD)
-#  define HAVE_POLL
-#  define HAVE_SNPRINTF
+#  define HAVE_POLL_SOAP
+#  define HAVE_SNPRINTF_SOAP
 #  define HAVE_STRLCPY
 #  define HAVE_STRRCHR
 #  define HAVE_STRTOD
 #  define HAVE_SSCANF
 #  define HAVE_STRTOD_L
 #  define HAVE_SSCANF_L
-#  define HAVE_STRTOL
-#  define HAVE_STRTOUL
+#  define HAVE_STRTOL_SOAP
+#  define HAVE_STRTOUL_SOAP
 #  define HAVE_STRTOLL
-#  define HAVE_STRTOULL
-#  define HAVE_GETTIMEOFDAY
+#  define HAVE_STRTOULL_SOAP
+#  define HAVE_GETTIMEOFDAY_SOAP
 #  define HAVE_RAND_R
 #  define HAVE_GMTIME_R
 #  define HAVE_ASCTIME_R
-#  define HAVE_LOCALTIME_R
+#  define HAVE_LOCALTIME_R_SOAP
 #  define HAVE_STRERROR_R
 #  define HAVE_WCTOMB
 #  define HAVE_MBTOWC
@@ -412,42 +412,42 @@ extern intmax_t __strtoull(const char*, char**, int);
 #  define SOAP_ULONG_FORMAT "%qu"
 #  define HAVE_ISNAN
 #  define HAVE_ISINF
-#  define HAVE_LOCALE_H
+#  define HAVE_LOCALE_H_SOAP
 #  define HAVE_XLOCALE_H
 #  define HAVE_RANDOM
 # elif defined(__VMS)
 #  include <ioctl.h>
-#  define HAVE_SNPRINTF
+#  define HAVE_SNPRINTF_SOAP
 #  define HAVE_STRRCHR
 #  define HAVE_STRTOD
 #  define HAVE_SSCANF
-#  define HAVE_STRTOL
-#  define HAVE_STRTOUL
-#  define HAVE_SYS_TIMEB_H
+#  define HAVE_STRTOL_SOAP
+#  define HAVE_STRTOUL_SOAP
+#  define HAVE_SYS_TIMEB_H_SOAP
 #  define HAVE_FTIME
 #  define HAVE_RAND_R
 #  define HAVE_GMTIME_R
 #  define HAVE_ASCTIME_R
-#  define HAVE_LOCALTIME_R
+#  define HAVE_LOCALTIME_R_SOAP
 #  define HAVE_WCTOMB
 #  define HAVE_MBTOWC
 # elif defined(__GLIBC__) || defined(__GNU__)
-#  define HAVE_POLL
-#  define HAVE_SNPRINTF
+#  define HAVE_POLL_SOAP
+#  define HAVE_SNPRINTF_SOAP
 #  define HAVE_STRRCHR
 #  define HAVE_STRTOD
 #  define HAVE_SSCANF
-#  define HAVE_STRTOL
-#  define HAVE_STRTOUL
+#  define HAVE_STRTOL_SOAP
+#  define HAVE_STRTOUL_SOAP
 #  define HAVE_STRTOLL
-#  define HAVE_STRTOULL
-#  define HAVE_SYS_TIMEB_H
-#  define HAVE_GETTIMEOFDAY
+#  define HAVE_STRTOULL_SOAP
+#  define HAVE_SYS_TIMEB_H_SOAP
+#  define HAVE_GETTIMEOFDAY_SOAP
 #  define HAVE_FTIME
 #  define HAVE_RAND_R
 #  define HAVE_GMTIME_R
 #  define HAVE_ASCTIME_R
-#  define HAVE_LOCALTIME_R
+#  define HAVE_LOCALTIME_R_SOAP
 #  define HAVE_STRERROR_R
 #  define HAVE_TIMEGM
 #  define HAVE_WCTOMB
@@ -457,41 +457,41 @@ extern intmax_t __strtoull(const char*, char**, int);
 #  if !defined(__GNUC__) || __GNUC__ >= 4 /* gcc 3 and earlier often refuse to compile _l functions */
 #   define HAVE_STRTOD_L
 #   define HAVE_SSCANF_L
-#   define HAVE_LOCALE_H
+#   define HAVE_LOCALE_H_SOAP
 #  endif
 # elif defined(TRU64)
-#  define HAVE_SNPRINTF
+#  define HAVE_SNPRINTF_SOAP
 #  define HAVE_STRRCHR
 #  define HAVE_STRTOD
 #  define HAVE_SSCANF
-#  define HAVE_STRTOL
-#  define HAVE_STRTOUL
-#  define HAVE_GETTIMEOFDAY
-#  define HAVE_SYS_TIMEB_H
+#  define HAVE_STRTOL_SOAP
+#  define HAVE_STRTOUL_SOAP
+#  define HAVE_GETTIMEOFDAY_SOAP
+#  define HAVE_SYS_TIMEB_H_SOAP
 #  define HAVE_RAND_R
 #  define HAVE_GMTIME_R
 #  define HAVE_ASCTIME_R
-#  define HAVE_LOCALTIME_R
+#  define HAVE_LOCALTIME_R_SOAP
 #  define __USE_STD_IOSTREAM
 #  define HAVE_WCTOMB
 #  define HAVE_MBTOWC
 #  define SOAP_LONG_FORMAT "%ld"
 #  define SOAP_ULONG_FORMAT "%lu"
-#  define HAVE_LOCALE_H
+#  define HAVE_LOCALE_H_SOAP
 # elif defined(MAC_CARBON)
 #  define WITH_NOIO
-#  define HAVE_SNPRINTF
+#  define HAVE_SNPRINTF_SOAP
 #  define HAVE_STRRCHR
 #  define HAVE_STRTOD
 #  define HAVE_SSCANF
-#  define HAVE_STRTOL
-#  define HAVE_STRTOUL
+#  define HAVE_STRTOL_SOAP
+#  define HAVE_STRTOUL_SOAP
 #  define HAVE_FTIME
 #  define HAVE_RAND_R
 #  define HAVE_GETHOSTBYNAME_R
 #  define HAVE_GMTIME_R
 #  define HAVE_ASCTIME_R
-#  define HAVE_LOCALTIME_R
+#  define HAVE_LOCALTIME_R_SOAP
 #  define HAVE_STRERROR_R
 #  define HAVE_WCTOMB
 #  define HAVE_MBTOWC
@@ -508,102 +508,102 @@ extern intmax_t __strtoull(const char*, char**, int);
 #  define HAVE_STRRCHR
 #  define HAVE_STRTOD
 #  define HAVE_SSCANF
-#  define HAVE_STRTOL
-#  define HAVE_STRTOUL
+#  define HAVE_STRTOL_SOAP
+#  define HAVE_STRTOUL_SOAP
 #  define HAVE_GMTIME
 #  define HAVE_LOCALTIME
 #  define HAVE_MKTIME
 # elif defined(OS390)
-#  define HAVE_SNPRINTF
+#  define HAVE_SNPRINTF_SOAP
 #  define HAVE_STRRCHR
 #  define HAVE_STRTOD
 #  define HAVE_SSCANF
-#  define HAVE_STRTOL
-#  define HAVE_STRTOUL
-#  define HAVE_SYS_TIMEB_H
+#  define HAVE_STRTOL_SOAP
+#  define HAVE_STRTOUL_SOAP
+#  define HAVE_SYS_TIMEB_H_SOAP
 #  define HAVE_FTIME
 #  define HAVE_RAND_R
 #  define HAVE_GMTIME_R
 #  define HAVE_ASCTIME_R
-#  define HAVE_LOCALTIME_R
+#  define HAVE_LOCALTIME_R_SOAP
 #  define HAVE_WCTOMB
 #  define HAVE_MBTOWC
 # elif defined(AS400)
-#  define HAVE_SNPRINTF
+#  define HAVE_SNPRINTF_SOAP
 #  define HAVE_STRRCHR
 #  define HAVE_STRTOD
 #  define HAVE_SSCANF
-#  define HAVE_STRTOL
-#  define HAVE_STRTOUL
-#  define HAVE_SYS_TIMEB_H
+#  define HAVE_STRTOL_SOAP
+#  define HAVE_STRTOUL_SOAP
+#  define HAVE_SYS_TIMEB_H_SOAP
 #  define HAVE_FTIME
 #  define HAVE_RAND_R
 #  define HAVE_GMTIME_R
 #  define HAVE_ASCTIME_R
-#  define HAVE_LOCALTIME_R
+#  define HAVE_LOCALTIME_R_SOAP
 #  define HAVE_WCTOMB
 #  define HAVE_MBTOWC
 # elif defined(__QNX__) || defined(QNX)
 /* QNX does not have a working version of strtof */
 #  undef HAVE_STRTOF
-#  define HAVE_POLL
-#  define HAVE_SNPRINTF
+#  define HAVE_POLL_SOAP
+#  define HAVE_SNPRINTF_SOAP
 #  define HAVE_STRLCPY
 #  define HAVE_STRRCHR
 #  define HAVE_STRTOD
 #  define HAVE_SSCANF
-#  define HAVE_STRTOL
-#  define HAVE_STRTOUL
+#  define HAVE_STRTOL_SOAP
+#  define HAVE_STRTOUL_SOAP
 #  define HAVE_STRTOLL
-#  define HAVE_STRTOULL
-#  define HAVE_GETTIMEOFDAY
-#  define HAVE_SYS_TIMEB_H
+#  define HAVE_STRTOULL_SOAP
+#  define HAVE_GETTIMEOFDAY_SOAP
+#  define HAVE_SYS_TIMEB_H_SOAP
 #  define HAVE_FTIME
 #  define HAVE_RAND_R
 #  define HAVE_GETHOSTBYNAME_R
 #  define HAVE_GMTIME_R
 #  define HAVE_ASCTIME_R
-#  define HAVE_LOCALTIME_R
+#  define HAVE_LOCALTIME_R_SOAP
 #  define HAVE_STRERROR_R
 #  define HAVE_WCTOMB
 #  define HAVE_MBTOWC
 # elif defined(SUN_OS)
-#  define HAVE_SNPRINTF
+#  define HAVE_SNPRINTF_SOAP
 #  define HAVE_STRRCHR
 #  define HAVE_STRTOD
 #  define HAVE_SSCANF
-#  define HAVE_STRTOL
-#  define HAVE_STRTOUL
-#  define HAVE_SYS_TIMEB_H
+#  define HAVE_STRTOL_SOAP
+#  define HAVE_STRTOUL_SOAP
+#  define HAVE_SYS_TIMEB_H_SOAP
 #  define HAVE_FTIME
 #  define HAVE_RAND_R
 #  define HAVE_GETHOSTBYNAME_R
 #  define HAVE_GMTIME_R
 #  define HAVE_ASCTIME_R
-#  define HAVE_LOCALTIME_R
+#  define HAVE_LOCALTIME_R_SOAP
 # else /* Default assumptions for supported library functions when not including config.h */
 #  ifndef WITH_C_LOCALE
 #   ifndef WITH_NO_C_LOCALE
 #    define WITH_NO_C_LOCALE /* turn locale support off by default */
 #   endif
 #  endif
-#  define HAVE_SNPRINTF
+#  define HAVE_SNPRINTF_SOAP
 #  define HAVE_STRRCHR
 #  define HAVE_STRTOD
 #  define HAVE_SSCANF
-#  define HAVE_STRTOL
-#  define HAVE_STRTOUL
+#  define HAVE_STRTOL_SOAP
+#  define HAVE_STRTOUL_SOAP
 #  define HAVE_STRTOLL
-#  define HAVE_STRTOULL
-#  define HAVE_SYS_TIMEB_H
+#  define HAVE_STRTOULL_SOAP
+#  define HAVE_SYS_TIMEB_H_SOAP
 #  define HAVE_FTIME
 #  define HAVE_RAND_R
 #  define HAVE_GETHOSTBYNAME_R
 #  define HAVE_GMTIME_R
 #  define HAVE_ASCTIME_R
-#  define HAVE_LOCALTIME_R
+#  define HAVE_LOCALTIME_R_SOAP
 #  define HAVE_STRERROR_R
-#  define HAVE_LOCALE_H
+#  define HAVE_LOCALE_H_SOAP
 #  ifdef MB_LEN_MAX
 #   define HAVE_WCTOMB
 #   define HAVE_MBTOWC
@@ -665,7 +665,7 @@ extern intmax_t __strtoull(const char*, char**, int);
 #endif
 
 /* if we have locale.h then we should use it WITH_C_LOCALE enabled to avoid decimal point conversion issues */
-#ifdef HAVE_LOCALE_H
+#ifdef HAVE_LOCALE_H_SOAP
 # ifndef WITH_NO_C_LOCALE
 #  ifndef WITH_C_LOCALE
 #   define WITH_C_LOCALE
@@ -678,7 +678,7 @@ extern intmax_t __strtoull(const char*, char**, int);
 # if !defined(WITH_NO_C_LOCALE)
 #  define WITH_NO_C_LOCALE
 # endif
-# undef HAVE_GETTIMEOFDAY
+# undef HAVE_GETTIMEOFDAY_SOAP
 #endif
 
 /* user can set WITH_NO_C_LOCALE to force removal of locale (e.g. in case of compiler errors) */
@@ -748,8 +748,8 @@ extern intmax_t __strtoull(const char*, char**, int);
 # undef HAVE_MBTOWC
 # undef HAVE_GMTIME_R
 # undef HAVE_ASCTIME_R
-# undef HAVE_LOCALTIME_R
-# undef HAVE_SNPRINTF
+# undef HAVE_LOCALTIME_R_SOAP
+# undef HAVE_SNPRINTF_SOAP
 # define SOAP_BUFLEN (32767)
 # define SOAP_SOCKET short
 #pragma nolist
@@ -775,7 +775,7 @@ extern intmax_t __strtoull(const char*, char**, int);
 # include <ntlm.h>
 #endif
 
-#ifdef HAVE_POLL
+#ifdef HAVE_POLL_SOAP
 # include <poll.h>
 #endif
 
@@ -806,7 +806,7 @@ extern intmax_t __strtoull(const char*, char**, int);
 #  include <sys/types.h>
 # endif
 # ifndef WITH_LEAN
-#  ifdef HAVE_SYS_TIMEB_H
+#  ifdef HAVE_SYS_TIMEB_H_SOAP
 #   include <sys/timeb.h>              /* for ftime() */
 #  endif
 #  include <time.h>
@@ -820,7 +820,7 @@ extern intmax_t __strtoull(const char*, char**, int);
   extern int h_errno;
 #endif
 
-#ifdef HAVE_GETTIMEOFDAY
+#ifdef HAVE_GETTIMEOFDAY_SOAP
 # ifndef WIN32
 #  ifdef VXWORKS
 #   ifdef _WRS_KERNEL
@@ -1493,7 +1493,7 @@ extern const char soap_base64o[], soap_base64i[];
 */
 
 /* use safer snprintf if possible or guard sprintf against overrun (assumes no variadic macros) */
-# ifdef HAVE_SNPRINTF
+# ifdef HAVE_SNPRINTF_SOAP
 #  if _MSC_VER >= 1400
 #   define SOAP_SNPRINTF(buf, len, num) void)_snprintf_s((buf), (len), _TRUNCATE
 #   define SOAP_SNPRINTF_SAFE(buf, len) void)_snprintf_s((buf), (len), _TRUNCATE
@@ -3098,13 +3098,13 @@ soap_wchar soap_get1(struct soap*);
  SOAP_FMAC1 char* SOAP_FMAC2 soap_strrchr(const char *s, int t);
 #endif
 
-#ifdef HAVE_STRTOL
+#ifdef HAVE_STRTOL_SOAP
 # define soap_strtol(s, t, b) strtol(s, t, b)
 #else
  SOAP_FMAC1 long SOAP_FMAC2 soap_strtol(const char*, char**, int);
 #endif
 
-#ifdef HAVE_STRTOUL
+#ifdef HAVE_STRTOUL_SOAP
 # define soap_strtoul(s, t, b) strtoul(s, t, b)
 #else
  SOAP_FMAC1 unsigned long SOAP_FMAC2 soap_strtoul(const char*, char**, int);
@@ -3120,7 +3120,7 @@ soap_wchar soap_get1(struct soap*);
 
 #if defined(WIN32) && !defined(__MINGW32__) && !defined(__MINGW64__) && !defined(__BORLANDC__)
 # define soap_strtoull _strtoui64
-#elif defined(HAVE_STRTOULL) && !defined(soap_strtoull)
+#elif defined(HAVE_STRTOULL_SOAP) && !defined(soap_strtoull)
 # define soap_strtoull strtoull
 #elif !defined(soap_strtoull)
  SOAP_FMAC1 ULONG64 SOAP_FMAC2 soap_strtoull(const char*, char**, int);

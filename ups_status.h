@@ -25,11 +25,11 @@
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/session_api.h>
 #include <net-snmp/library/snmp_api.h>
-#include <QtNetSNMP/qsnmpmanager.h>
-#include <QtNetSNMP/qsnmpobject.h>
-#include "QtNetSNMP/qsnmpoid.h"
+//#include <QtNetSNMP/qsnmpmanager.h>
+//#include <QtNetSNMP/qsnmpobject.h>
+//#include "QtNetSNMP/qsnmpoid.h"
 
-using namespace QtNetSNMP;
+//using namespace QtNetSNMP;
 
 
 //using namespace nut;

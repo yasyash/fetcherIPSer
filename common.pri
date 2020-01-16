@@ -23,4 +23,5 @@ linux-g++: QMAKE_CXXFLAGS += -std=c++11
 
 INCLUDEPATH += $${PROJECT_ROOT_PATH}/src/include/
 
+
 DESTDIR = $${BIN_PATH}

@@ -35,7 +35,7 @@
 #include "meteotcpsock.h"
 #include "serinus.h"
 #include "grimm.h"
-#include "liga_ac.h"
+//#include "liga.h"
 
 class processor : public QObject
 {
@@ -135,7 +135,7 @@ private:
     Grimm *m_grimm; //member for Grimm
     QString m_grimmport;
 
-    liga_ac     *m_liga; //member for ACA-Liga
+    //Liga     *m_liga; //member for ACA-Liga
     QString m_liga_ip;
     quint16 m_liga_port;
 

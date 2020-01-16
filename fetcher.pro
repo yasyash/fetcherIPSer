@@ -29,12 +29,14 @@ SOURCES += \
         surgard.cpp\
         dusttcpsock.cpp \
         meteotcpsock.cpp \
-    serinus.cpp \
-    grimm.cpp \
-    soap/soapWSHttpBinding_USCOREIAutoChromWCFHostProxy.cpp \
-    soap/soapC.cpp \
-    soap/stdsoap2.cpp \
-    liga_ac.cpp
+        serinus.cpp \
+        grimm.cpp \
+        liga.cpp\
+        soapC.cpp\
+        soapWSHttpBinding_USCOREIAutoChromWCFHostProxy.cpp\
+        stdsoap2.cpp
+
+
 
 HEADERS +=\
     3rdparty/qextserialport/qextserialport.h \
@@ -50,19 +52,21 @@ HEADERS +=\
     meteotcpsock.h \
     serinus.h \
     grimm.h \
-    soap/soapWSHttpBinding_USCOREIAutoChromWCFHostProxy.h \
-    soap/soapStub.h \
-    soap/soapH.h \
-    soap/stdsoap2.h \
-    soap/soap12.h \
-    soap/WSHttpBinding_USCOREIAutoChromWCFHost.nsmap \
-    liga_ac.h
+    liga.h\
+    soapWSHttpBinding_USCOREIAutoChromWCFHostProxy.h \
+    soapH.h \
+    soapStub.h \
+    WSHttpBinding_USCOREIAutoChromWCFHost.nsmap \
+    wsa5.h
+
+
 
 
 INCLUDEPATH += 3rdparty/libmodbus \
                3rdparty/libmodbus/src \
                3rdparty/qextserialport \
                src
+
                # /usr/local/include/net-snmp
 unix {
     SOURCES += 3rdparty/qextserialport/posix_qextserialport.cpp	\
@@ -85,5 +89,7 @@ DEFINES += WITH_PURE_VIRTUAL
 DEFINES += DUSTTCP_H
 DEFINES += QTNETSNMP_LIBRARY
 #DEFINES += DUSTUDP_H
+
+
 
 LIBS += -lnetsnmp -lnetsnmpmibs -lqt-net-snmp
