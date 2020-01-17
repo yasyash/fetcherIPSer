@@ -19,12 +19,12 @@
 #ifndef PROCESSOR_H
 #define PROCESSOR_H
 
+
 #include <QTimer>
 #include <QMap>
 #include <QSqlDatabase>
 #include <QMutex>
 #include <QUuid>
-#include <QMap>
 #include <QVector>
 
 #include "modbus.h"
@@ -35,7 +35,7 @@
 #include "meteotcpsock.h"
 #include "serinus.h"
 #include "grimm.h"
-//#include "liga.h"
+#include "liga.h"
 
 class processor : public QObject
 {
@@ -65,7 +65,7 @@ public slots:
         emit finished ();
     }
     void fillSensorData( bool *_is_read, QMap<QString, float> *_measure, QMap<QString, int> *_sample); //sensor equipment type or name
-
+    void fillSensorData( bool *_is_read, QMap<QString, float> *_measure); //polymorphic method for slow measuring
 
 private slots:
     void sendModbusRequest( void ); //update data view
@@ -135,7 +135,7 @@ private:
     Grimm *m_grimm; //member for Grimm
     QString m_grimmport;
 
-    //Liga     *m_liga; //member for ACA-Liga
+    Liga     *m_liga; //member for ACA-Liga
     QString m_liga_ip;
     quint16 m_liga_port;
 

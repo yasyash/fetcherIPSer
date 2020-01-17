@@ -19,7 +19,9 @@
 #ifndef UPS_STATUS_H
 #define UPS_STATUS_H
 
-#include<QObject>
+#include <QString>
+#include <QMap>
+#include <qglobal.h>
 
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
@@ -76,7 +78,6 @@ private:
     //Client * m_client;
     variable_list * get_data(char *mib);
 
-signals:
 
 
 

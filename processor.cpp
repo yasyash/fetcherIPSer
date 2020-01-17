@@ -422,7 +422,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     // ACA-Liga init
     //  -ligaip 192.168.1.111 -ligaport 7120
 
-   /* m_liga_ip = cmdline_args.value(cmdline_args.indexOf("-ligaip") +1);
+    m_liga_ip = cmdline_args.value(cmdline_args.indexOf("-ligaip") +1);
     if (m_liga_ip == "")
     {
         qDebug ( "IP address of the ACA-Liga is not set.");
@@ -436,12 +436,12 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
         }
         else
         {
-            m_liga = new liga_ac(this, &m_liga_ip, &m_liga_port);
-         //   connect(m_liga, SIGNAL(dataIsReady(bool*, QMap<QString, float>*, QMap<QString, int>*)), this, SLOT(fillSensorData(bool*, QMap<QString, float>*, QMap<QString, int>*))); //fill several data to one sensor's base
+            m_liga = new Liga( &m_liga_ip, &m_liga_port);
+            //   connect(m_liga, SIGNAL(dataIsReady(bool*, QMap<QString, float>*, QMap<QString, int>*)), this, SLOT(fillSensorData(bool*, QMap<QString, float>*, QMap<QString, int>*))); //fill several data to one sensor's base
             //QObject::connect(m_serinus, SIGNAL(dataIsReady(const QString)), this, SLOT(test())); //fill several data to one sensor's base
 
         }
-    }*/
+    }
 
     //end of equipments init.
 
@@ -486,6 +486,15 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     m_range->insert("PM2.5", 1000);
     m_range->insert("PM4", 1000);
     m_range->insert("PM10", 1000);
+
+    m_range->insert("бензол", 1000);
+    m_range->insert("толуол", 1000);
+    m_range->insert("этилбензол", 1000);
+    m_range->insert("м,п-ксилол", 1000);
+    m_range->insert("о-ксилол", 1000);
+    m_range->insert("хлорбензол", 1000);
+    m_range->insert("стирол", 1000);
+    m_range->insert("фенол", 1000);
 
     m_range->insert("Ресурс сенс. NO", 1);
     m_range->insert("Ресурс сенс. H2S", 1);
@@ -1368,15 +1377,21 @@ void processor::transactionDB(void)
         query_log.bindValue(":descr", "Метеокомплекс на посту  " + QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")) + "  не отвечает..."  );
 
         query_log.exec();
-       // qDebug() << "Transaction status to the meteostation's table is " << ((query_log.exec() == true) ? "successful!" :  "not complete!");
-       // qDebug() << "The last error is " << (( query_log.lastError().text().trimmed() == "") ? "absent" : query_log.lastError().text());
-
-
-
-
-
-
+        // qDebug() << "Transaction status to the meteostation's table is " << ((query_log.exec() == true) ? "successful!" :  "not complete!");
+        // qDebug() << "The last error is " << (( query_log.lastError().text().trimmed() == "") ? "absent" : query_log.lastError().text());
     }
+
+
+
+    //ACA-Liga slow fetch data but too fast comparing with the chromatography processing
+
+    m_liga->getLastResult();
+    if (!m_liga->is_read)
+    {
+        fillSensorData(&m_liga->is_read, m_liga->measure);//copy data from object
+    }
+
+
 
     //Sensor data processing
 
@@ -1469,8 +1484,8 @@ void processor::transactionDB(void)
                 query_log.bindValue( ":type", 404 );
                 query_log.bindValue(":descr", "Сенсор " + _key + "     " + QString(m_uuid->value(sensor.key()).toString()).remove(QRegExp("[\\{\\}]"))+"  на посту " + QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")) + " не отвечает..."  );
 
-                 query_log.exec();
-                 }
+                query_log.exec();
+            }
 
         }
 
@@ -1633,4 +1648,20 @@ void processor::fillSensorData( bool *_is_read, QMap<QString, float> *_measure, 
 
 }
 
+void processor::fillSensorData( bool *_is_read, QMap<QString, float> *_measure)
+{
+    QMap<QString, float>::iterator sensor;
+
+
+
+    for (sensor = _measure->begin(); sensor != _measure->end(); ++sensor)
+    {
+
+        m_data->insert(sensor.key(), int(_measure->value(sensor.key()) *m_range->value(sensor.key())) );
+        m_measure->insert(sensor.key(), 1);
+
+    }
+    *_is_read = true;
+
+}
 

@@ -17,6 +17,7 @@
  */
 
 #include <QCoreApplication>
+#include "WSHttpBinding_USCOREIAutoChromWCFHost.nsmap"
 
 
 #include "app.h"

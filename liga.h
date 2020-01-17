@@ -1,12 +1,16 @@
+
+
+
 #ifndef LIGA_H
 #define LIGA_H
 
-
-#include "WSHttpBinding_USCOREIAutoChromWCFHost.nsmap"
-#include "soapWSHttpBinding_USCOREIAutoChromWCFHostProxy.h"
-#include "soapStub.h"
 #include <QString>
 #include <QDateTime>
+#include <QMap>
+
+
+#include "soapWSHttpBinding_USCOREIAutoChromWCFHostProxy.h"
+#include "soapStub.h"
 
 class Liga
 {
@@ -15,7 +19,7 @@ public:
     Liga( QString *ip, quint16 *port);
     virtual ~Liga();
 
-    void sendData(int command, QByteArray *data);
+    void getLastResult();
 
 
 
@@ -29,10 +33,13 @@ protected:
 
 private:
     //QTcpSocket *m_sock;
+    char *_action = "http://liga.AutoChrom.WCFHost/IAutoChromWCFHost/";
+
     quint32 blockSize;
     QString *m_ip;
     int *m_port;
     soap *m_soap;
+    WSHttpBinding_USCOREIAutoChromWCFHostProxy *liga_proxy;
 
 public:
     //enum _status {Idle, Waiting, Running};
