@@ -36,9 +36,9 @@ private:
     char *_action = "http://liga.AutoChrom.WCFHost/IAutoChromWCFHost/";
 
     quint32 blockSize;
-    QString *m_ip;
-    int *m_port;
-    soap *m_soap;
+    const QString *m_ip;
+    const int *m_port;
+    struct soap *m_soap;
     WSHttpBinding_USCOREIAutoChromWCFHostProxy *liga_proxy;
 
 public:
@@ -46,6 +46,7 @@ public:
     enum _command {RDMN, MSTATUS, MSTART, MSTOP, RMMEAS};
     QString model;
     QString status;
+    bool error;
     bool is_read;
     QMap<int, QDateTime> *sample_t;
     QMap<QString, float> *measure;

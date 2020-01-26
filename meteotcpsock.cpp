@@ -128,7 +128,7 @@ void MeteoTcpSock::readData()
     measure->insert("temp_in", measure->value("temp_in") + ((float)((uchar(data[11])<<8) + (uchar(data[10])))/10-32)*5/9); //Fahrenheit TO Celsius Conversion Formula
     measure->insert("hum_in", measure->value("hum_in") + (float)(uchar(data[12])));
     measure->insert("temp_out", measure->value("temp_out") + ((float)((uchar(data[14])<<8) + (uchar(data[13])))/10-32)*5/9); //Fahrenheit TO Celsius Conversion Formula
-    measure->insert("speed_wind", measure->value("speed_wind") + (float)(uchar(data[15]))*1609.344f);//mile to meter convertion formula
+    measure->insert("speed_wind", measure->value("speed_wind") + (float)(uchar(data[15]))*1609.344f/3600.0f);//mile to meter convertion formula
     measure->insert("dir_wind",  measure->value("dir_wind") + (float)((uchar(data[18])<<8) + uchar(data[17])));
     measure->insert("dew_pt",  measure->value("dew_pt") + ((float)((uchar(data[32])<<8) + (uchar(data[31])))-32)*5/9); //Fahrenheit TO Celsius Conversion Formula
     measure->insert("hum_out", measure->value("hum_out") + (float)(uchar(data[34])));

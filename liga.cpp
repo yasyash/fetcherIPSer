@@ -26,22 +26,23 @@
 Liga::Liga(QString *ip, quint16 *port)
 
 {
-    m_soap = new soap();
+    struct soap _soap;
 
     struct SOAP_ENV__Header header;
     struct wsa5__EndpointReferenceType replyTo;
 
-    soap_init(m_soap);
+    soap_init(&_soap);
+    //m_soap = &_soap;
 
-    soap_default_SOAP_ENV__Header(m_soap, &header);
+    soap_default_SOAP_ENV__Header(&_soap, &header);
 
-    soap_default_wsa5__EndpointReferenceType(m_soap, &replyTo);
+    soap_default_wsa5__EndpointReferenceType(&_soap, &replyTo);
 
     replyTo.Address = "http://www.w3.org/2005/08/addressing/anonymous";
 
 
     header.wsa5__ReplyTo = &replyTo;
-    char *str_to = "http://";
+    char str_to[255] = "http://";
 
     strcat(str_to, ip->toUtf8());
     strcat(str_to, ":");
@@ -49,16 +50,17 @@ Liga::Liga(QString *ip, quint16 *port)
     strcat( str_to, "/liga.AutoChrom");
     header.wsa5__To = str_to;
 
-    strcat(str_to, "");
-    strcat(str_to, _action);
-    strcat(str_to, "GetSystemConfigurations");
+    char action[255] = "";
+    strcat(action, _action);
+    strcat(action, "GetSystemConfigurations");
 
-    header.wsa5__Action = str_to;
+    header.wsa5__Action = action;
 
-    m_soap->header = &header;
+    _soap.header = &header;
 
+    liga_proxy = new  WSHttpBinding_USCOREIAutoChromWCFHostProxy(&_soap);
+    m_soap = &_soap;
 
-    liga_proxy = new  WSHttpBinding_USCOREIAutoChromWCFHostProxy(m_soap);
     _ns2__GetSystemConfigurations sysConf;
     _ns2__GetSystemConfigurationsResponse sysConfResp;
 
@@ -80,12 +82,13 @@ Liga::Liga(QString *ip, quint16 *port)
     sample_t->insert(1, dt);
 
     int i = liga_proxy->GetSystemConfigurations(&sysConf, sysConfResp);
-    std::string _str = *sysConfResp.GetSystemConfigurationsResult->Aux2Device_USCOREConfiguration->PortNumber;
+    if (!i){
+        std::string _str = *sysConfResp.GetSystemConfigurationsResult->Aux2Device_USCOREConfiguration->PortNumber;
 
-    is_read = false;
-    status = "";
-    connected = (_str.size() > 0) ? true : false;
-    if (connected){
+        is_read = false;
+        status = "";
+        connected = (_str.size() > 0) ? true : false;
+
 
         QMap<QString, float>::iterator it = measure->begin();
 
@@ -100,13 +103,18 @@ Liga::Liga(QString *ip, quint16 *port)
             qDebug() << "ACA-Liga measure: " << it.key() << " =  " << it.value();
         }
         is_read = true;
-
+        error= false;
     } else {
         {
-            qDebug() << "ACA-Liga measure equipment handling hasn't been initialized. Not respond.";
+            qDebug() << "ACA-Liga measure equipment handling has been initialized with issues. Not respond.";
 
         }
+        error = true;
+        status = "ACA-Liga measure equipment handling has been initialized with issues. Not respond.";
     }
+    const int j = 7120;
+    m_ip = ip;
+    //m_port = &j;
 }
 
 Liga::~Liga()
@@ -116,36 +124,101 @@ Liga::~Liga()
 
 void Liga::getLastResult()
 {
-    char *str_to = NULL;
+    error = false;
+    struct soap _soap;
+
+    struct SOAP_ENV__Header header;
+    struct wsa5__EndpointReferenceType replyTo;
+
+    soap_init(&_soap);
+    //m_soap = &_soap;
+
+    soap_default_SOAP_ENV__Header(&_soap, &header);
+
+    soap_default_wsa5__EndpointReferenceType(&_soap, &replyTo);
+
+    replyTo.Address = "http://www.w3.org/2005/08/addressing/anonymous";
+
+
+    header.wsa5__ReplyTo = &replyTo;
+    char str_to[255] = "http://";
+
+    strcat(str_to, m_ip->toUtf8());
+    strcat(str_to, ":");
+    strcat(str_to,  "7120");
+    strcat( str_to, "/liga.AutoChrom");
+    header.wsa5__To = str_to;
+
+    char action[255] = "";
+    strcat(action, _action);
+    strcat(action, "GetLastResult");
+
+    header.wsa5__Action = action;
+
+    _soap.header = &header;
+
     _ns2__GetLastResult getLastRes;
     _ns2__GetLastResultResponse getLastResResp;
 
 
-    strcat(str_to, "");
-    strcat(str_to, _action);
-    strcat(str_to, "GetLastResult");
-
-    liga_proxy->soap->header->wsa5__Action = str_to;
+    liga_proxy->soap = &_soap;
 
     int i = liga_proxy->GetLastResult(&getLastRes, getLastResResp);
-
-    if (getLastResResp.GetLastResultResult->EndSamplingDateTime != nullptr)
-    {
-
-        sample_t->insert(1, QDateTime::fromTime_t(*getLastResResp.GetLastResultResult->EndSamplingDateTime)); //insert last sample result
-
-        if(sample_t->value(1) != sample_t->value(0))
+    if (!i){
+        if (getLastResResp.GetLastResultResult->EndSamplingDateTime != nullptr)
         {
-            sample_t->insert(0, sample_t->value(1)); //insert datetime of last sample into previous node
-        }
 
-        for (int j = 0; j < getLastResResp.GetLastResultResult->Results->EResult.size(); j++)
-        {
-            measure->insert(QString::fromStdString(*getLastResResp.GetLastResultResult->Results->EResult[j]->ComponentName),
-                            QString::fromStdString(*getLastResResp.GetLastResultResult->Results->EResult[j]->Value).toFloat());
-        }
-        is_read = false;
+            sample_t->insert(1, QDateTime::fromTime_t(*getLastResResp.GetLastResultResult->EndSamplingDateTime)); //insert last sample result
 
+            if(sample_t->value(1) != sample_t->value(0))
+            {
+                sample_t->insert(0, sample_t->value(1)); //insert datetime of last sample into previous node
+            }
+
+            for (int j = 0; j < getLastResResp.GetLastResultResult->Results->EResult.size(); j++)
+            {
+                switch( j )
+                {
+                case 0:
+                    measure->insert("бензол", QString::fromStdString(*getLastResResp.GetLastResultResult->Results->EResult[j]->Value).toFloat());
+                    break;
+                case 1:
+                    measure->insert("толуол", QString::fromStdString(*getLastResResp.GetLastResultResult->Results->EResult[j]->Value).toFloat());
+                    break;
+                case 2:
+                    measure->insert("этилбензол", QString::fromStdString(*getLastResResp.GetLastResultResult->Results->EResult[j]->Value).toFloat());
+                    break;
+                case 3:
+                    measure->insert("м,п-ксилол", QString::fromStdString(*getLastResResp.GetLastResultResult->Results->EResult[j]->Value).toFloat());
+                    break;
+                case 4:
+                    measure->insert("о-ксилол", QString::fromStdString(*getLastResResp.GetLastResultResult->Results->EResult[j]->Value).toFloat());
+                    break;
+                case 5:
+                    measure->insert("хлорбензол", QString::fromStdString(*getLastResResp.GetLastResultResult->Results->EResult[j]->Value).toFloat());
+                    break;
+                case 6:
+                    measure->insert("стирол", QString::fromStdString(*getLastResResp.GetLastResultResult->Results->EResult[j]->Value).toFloat());
+                    break;
+                case 7:
+                    measure->insert("фенол", QString::fromStdString(*getLastResResp.GetLastResultResult->Results->EResult[j]->Value).toFloat());
+                    break;
+
+                default:
+                    break;
+                }
+                is_read = false;
+                error = false;
+                status = "";
+            }
+
+        }
     }
+    else {
+        error = true;
+        if (i == SOAP_TCP_ERROR)
+            status = "Connection TCP error...";
+    }
+
 }
 #endif

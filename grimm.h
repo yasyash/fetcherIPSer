@@ -23,6 +23,7 @@
 #include <QUdpSocket>
 #include <QTcpSocket>
 #include <QSerialPort>
+#include <QTimer>
 
 class Grimm : public QObject
 {
@@ -39,11 +40,12 @@ public:
 
 protected:
 
-
 private slots:
     void readData();
     void displayError(QSerialPort::SerialPortError error);
     void writes();
+    void rand();
+
 
 signals:
     void errorOccurred(QSerialPort::SerialPortError error);
@@ -65,6 +67,8 @@ public:
     QMap<QString, float> *measure;
     enum _command last_command;
     bool connected = false;
+    QTimer * m_Timer;
+
 };
 
 #endif // GRIMM_H

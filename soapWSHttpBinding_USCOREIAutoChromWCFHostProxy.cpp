@@ -198,7 +198,7 @@ int WSHttpBinding_USCOREIAutoChromWCFHostProxy::send_StartAutoPlan(const char *s
 	if (soap_endpoint_url != NULL)
 		soap_endpoint = soap_endpoint_url;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://109.195.18.108:7120/liga.AutoChrom";
+        soap_endpoint = "http://192.168.1.111:7120/liga.AutoChrom";
 	if (soap_action == NULL)
 		soap_action = "http://liga.AutoChrom.WCFHost/IAutoChromWCFHost/StartAutoPlan";
 	soap_tmp___tempuri__StartAutoPlan.ns2__StartAutoPlan = ns2__StartAutoPlan;
@@ -255,7 +255,7 @@ int WSHttpBinding_USCOREIAutoChromWCFHostProxy::send_StartOperation(const char *
 	if (soap_endpoint_url != NULL)
 		soap_endpoint = soap_endpoint_url;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://109.195.18.108:7120/liga.AutoChrom";
+        soap_endpoint = "http://192.168.1.111:7120/liga.AutoChrom";
 	if (soap_action == NULL)
 		soap_action = "http://liga.AutoChrom.WCFHost/IAutoChromWCFHost/StartOperation";
 	soap_tmp___tempuri__StartOperation.ns2__StartOperation = ns2__StartOperation;
@@ -312,7 +312,7 @@ int WSHttpBinding_USCOREIAutoChromWCFHostProxy::send_StopAnalyzing(const char *s
 	if (soap_endpoint_url != NULL)
 		soap_endpoint = soap_endpoint_url;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://109.195.18.108:7120/liga.AutoChrom";
+        soap_endpoint = "http://192.168.1.111:7120/liga.AutoChrom";
 	if (soap_action == NULL)
 		soap_action = "http://liga.AutoChrom.WCFHost/IAutoChromWCFHost/StopAnalyzing";
 	soap_tmp___tempuri__StopAnalyzing.ns2__StopAnalyzing = ns2__StopAnalyzing;
@@ -369,7 +369,7 @@ int WSHttpBinding_USCOREIAutoChromWCFHostProxy::send_AbortAnalyzing(const char *
 	if (soap_endpoint_url != NULL)
 		soap_endpoint = soap_endpoint_url;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://109.195.18.108:7120/liga.AutoChrom";
+        soap_endpoint = "http://192.168.1.111:7120/liga.AutoChrom";
 	if (soap_action == NULL)
 		soap_action = "http://liga.AutoChrom.WCFHost/IAutoChromWCFHost/AbortAnalyzing";
 	soap_tmp___tempuri__AbortAnalyzing.ns2__AbortAnalyzing = ns2__AbortAnalyzing;
@@ -426,7 +426,7 @@ int WSHttpBinding_USCOREIAutoChromWCFHostProxy::send_GetProcessingInfo(const cha
 	if (soap_endpoint_url != NULL)
 		soap_endpoint = soap_endpoint_url;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://109.195.18.108:7120/liga.AutoChrom";
+        soap_endpoint = "http://192.168.1.111:7120/liga.AutoChrom";
 	if (soap_action == NULL)
 		soap_action = "http://liga.AutoChrom.WCFHost/IAutoChromWCFHost/GetProcessingInfo";
 	soap_tmp___tempuri__GetProcessingInfo.ns2__GetProcessingInfo = ns2__GetProcessingInfo;
@@ -483,7 +483,7 @@ int WSHttpBinding_USCOREIAutoChromWCFHostProxy::send_SetIgnoreClearing(const cha
 	if (soap_endpoint_url != NULL)
 		soap_endpoint = soap_endpoint_url;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://109.195.18.108:7120/liga.AutoChrom";
+        soap_endpoint = "http://192.168.1.111:7120/liga.AutoChrom";
 	if (soap_action == NULL)
 		soap_action = "http://liga.AutoChrom.WCFHost/IAutoChromWCFHost/SetIgnoreClearing";
 	soap_tmp___tempuri__SetIgnoreClearing.ns2__SetIgnoreClearing = ns2__SetIgnoreClearing;
@@ -540,7 +540,7 @@ int WSHttpBinding_USCOREIAutoChromWCFHostProxy::send_GetSystemConfigurations(con
 	if (soap_endpoint_url != NULL)
 		soap_endpoint = soap_endpoint_url;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://109.195.18.108:7120/liga.AutoChrom";
+        soap_endpoint = "http://192.168.1.111:7120/liga.AutoChrom";
 	if (soap_action == NULL)
 		soap_action = "http://liga.AutoChrom.WCFHost/IAutoChromWCFHost/GetSystemConfigurations";
 	soap_tmp___tempuri__GetSystemConfigurations.ns2__GetSystemConfigurations = ns2__GetSystemConfigurations;
@@ -597,7 +597,7 @@ int WSHttpBinding_USCOREIAutoChromWCFHostProxy::send_SetSystemConfigurations(con
 	if (soap_endpoint_url != NULL)
 		soap_endpoint = soap_endpoint_url;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://109.195.18.108:7120/liga.AutoChrom";
+        soap_endpoint = "http://192.168.1.111:7120/liga.AutoChrom";
 	if (soap_action == NULL)
 		soap_action = "http://liga.AutoChrom.WCFHost/IAutoChromWCFHost/SetSystemConfigurations";
 	soap_tmp___tempuri__SetSystemConfigurations.ns2__SetSystemConfigurations = ns2__SetSystemConfigurations;
@@ -654,7 +654,7 @@ int WSHttpBinding_USCOREIAutoChromWCFHostProxy::send_GetResults(const char *soap
 	if (soap_endpoint_url != NULL)
 		soap_endpoint = soap_endpoint_url;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://109.195.18.108:7120/liga.AutoChrom";
+        soap_endpoint = "http://192.168.1.111:7120/liga.AutoChrom";
 	if (soap_action == NULL)
 		soap_action = "http://liga.AutoChrom.WCFHost/IAutoChromWCFHost/GetResults";
 	soap_tmp___tempuri__GetResults.ns2__GetResults = ns2__GetResults;
@@ -711,7 +711,7 @@ int WSHttpBinding_USCOREIAutoChromWCFHostProxy::send_GetLastResult(const char *s
 	if (soap_endpoint_url != NULL)
 		soap_endpoint = soap_endpoint_url;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://109.195.18.108:7120/liga.AutoChrom";
+        soap_endpoint = "http://192.168.1.111:7120/liga.AutoChrom";
 	if (soap_action == NULL)
 		soap_action = "http://liga.AutoChrom.WCFHost/IAutoChromWCFHost/GetLastResult";
 	soap_tmp___tempuri__GetLastResult.ns2__GetLastResult = ns2__GetLastResult;
@@ -768,7 +768,7 @@ int WSHttpBinding_USCOREIAutoChromWCFHostProxy::send_GetLastResultId(const char 
 	if (soap_endpoint_url != NULL)
 		soap_endpoint = soap_endpoint_url;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://109.195.18.108:7120/liga.AutoChrom";
+        soap_endpoint = "http://192.168.1.111:7120/liga.AutoChrom";
 	if (soap_action == NULL)
 		soap_action = "http://liga.AutoChrom.WCFHost/IAutoChromWCFHost/GetLastResultId";
 	soap_tmp___tempuri__GetLastResultId.ns2__GetLastResultId = ns2__GetLastResultId;
@@ -825,7 +825,7 @@ int WSHttpBinding_USCOREIAutoChromWCFHostProxy::send_GetResultsSinceId(const cha
 	if (soap_endpoint_url != NULL)
 		soap_endpoint = soap_endpoint_url;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://109.195.18.108:7120/liga.AutoChrom";
+        soap_endpoint = "http://192.168.1.111:7120/liga.AutoChrom";
 	if (soap_action == NULL)
 		soap_action = "http://liga.AutoChrom.WCFHost/IAutoChromWCFHost/GetResultsSinceId";
 	soap_tmp___tempuri__GetResultsSinceId.ns2__GetResultsSinceId = ns2__GetResultsSinceId;
@@ -882,7 +882,7 @@ int WSHttpBinding_USCOREIAutoChromWCFHostProxy::send_GetEvents(const char *soap_
 	if (soap_endpoint_url != NULL)
 		soap_endpoint = soap_endpoint_url;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://109.195.18.108:7120/liga.AutoChrom";
+        soap_endpoint = "http://192.168.1.111:7120/liga.AutoChrom";
 	if (soap_action == NULL)
 		soap_action = "http://liga.AutoChrom.WCFHost/IAutoChromWCFHost/GetEvents";
 	soap_tmp___tempuri__GetEvents.ns2__GetEvents = ns2__GetEvents;
@@ -939,7 +939,7 @@ int WSHttpBinding_USCOREIAutoChromWCFHostProxy::send_GetLastEventId(const char *
 	if (soap_endpoint_url != NULL)
 		soap_endpoint = soap_endpoint_url;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://109.195.18.108:7120/liga.AutoChrom";
+        soap_endpoint = "http://192.168.1.111:7120/liga.AutoChrom";
 	if (soap_action == NULL)
 		soap_action = "http://liga.AutoChrom.WCFHost/IAutoChromWCFHost/GetLastEventId";
 	soap_tmp___tempuri__GetLastEventId.ns2__GetLastEventId = ns2__GetLastEventId;
@@ -996,7 +996,7 @@ int WSHttpBinding_USCOREIAutoChromWCFHostProxy::send_GetEventsSinceId(const char
 	if (soap_endpoint_url != NULL)
 		soap_endpoint = soap_endpoint_url;
 	if (soap_endpoint == NULL)
-		soap_endpoint = "http://109.195.18.108:7120/liga.AutoChrom";
+        soap_endpoint = "http://192.168.1.111:7120/liga.AutoChrom";
 	if (soap_action == NULL)
 		soap_action = "http://liga.AutoChrom.WCFHost/IAutoChromWCFHost/GetEventsSinceId";
 	soap_tmp___tempuri__GetEventsSinceId.ns2__GetEventsSinceId = ns2__GetEventsSinceId;

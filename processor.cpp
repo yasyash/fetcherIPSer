@@ -40,7 +40,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     m_poll(false), // not working initial state
     funcModbus(0x03),
     addrModbus(0),
-    numCoils(6),
+    numCoils(7), //maximum 7 registers of modbus equipments of OPTEC
     verbose(false)
 
 {
@@ -876,7 +876,6 @@ void processor::sendModbusRequest( void )
                             int tmp, cnt;
                             uint8_t _mode = data & 0xFF;
 
-                            QTextStream(&result) << float (data) << " %";
 
                             if (i < slave.value()-1){ // resourse sensor detection - last register if it's true
 
@@ -903,8 +902,11 @@ void processor::sendModbusRequest( void )
                                 QTextStream(&result) << name << " : " << md << " : " << _number;
                                 qDebug() << result;
 
+
+
                             } else {
 
+                                QTextStream(&result) << float (data) << " %";
 
 
                                 str = "Ресурс сенс. " % tmp_type_measure;
@@ -1333,9 +1335,14 @@ void processor::transactionDB(void)
 
         for (meteo_iterator = m_meteo->measure->begin(); meteo_iterator != m_meteo->measure->end(); ++meteo_iterator)
         {
-
-            query.bindValue(QString(":").append(meteo_iterator.key()), meteo_iterator.value()/m_meteo->sample_t);
-
+            if ((meteo_iterator.key() == "dir_wind")||(meteo_iterator.key() == "dir_wind_hi"))
+            {
+                query.bindValue(QString(":").append(meteo_iterator.key()), QString::number(double(meteo_iterator.value()/m_meteo->sample_t), 'f', 1));
+            }
+            else
+            {
+                query.bindValue(QString(":").append(meteo_iterator.key()), meteo_iterator.value()/m_meteo->sample_t);
+            }
 
         }
         if (!m_conn->isOpen())
@@ -1389,6 +1396,17 @@ void processor::transactionDB(void)
     if (!m_liga->is_read)
     {
         fillSensorData(&m_liga->is_read, m_liga->measure);//copy data from object
+
+    } else { if (m_liga->error)
+        {
+        query_log.bindValue(":date_time", tmp_time );
+        query_log.bindValue( ":type", 404 );
+        query_log.bindValue(":descr", "Хроматограф на посту  " + QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")) + " работает с ошибкой." + m_liga->status  );
+
+        query_log.exec();
+
+        }
+
     }
 
 
@@ -1578,6 +1596,8 @@ void processor::readSocketStatus()
     //Meteostation data reading
     if (m_meteo->connected)
         m_meteo->sendData("LPS 2 1");//sendData("LOOP 1");
+
+    //m_liga->getLastResult();
 
     //UPS acqusition data reading
     if (m_ups->err_count <10){ //minimum error threshold

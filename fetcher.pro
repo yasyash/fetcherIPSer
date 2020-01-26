@@ -92,4 +92,4 @@ DEFINES += DUSTTCP_H
 
 
 
-LIBS += -lnetsnmp -lnetsnmpmibs -lqt-net-snmp
+LIBS += -lnetsnmp -lnetsnmpmibs #-lqt-net-snmp

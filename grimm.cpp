@@ -18,6 +18,7 @@
 
 #include "grimm.h"
 
+#include <QRandomGenerator>
 #include <QDebug>
 
 Grimm::Grimm(QObject *parent, QString *device,
@@ -77,6 +78,9 @@ Grimm::Grimm(QObject *parent, QString *device,
 
     }
 
+    m_Timer = new QTimer( this );
+    connect( m_Timer, SIGNAL(timeout()), this, SLOT(rand()));
+    m_Timer->start(20000);
     qDebug() << "Dust measure equipment handling via USB port has been initialized.";
 
 }
@@ -232,4 +236,60 @@ void Grimm::sendData( QByteArray *data)
 void Grimm::writes()
 {
     qDebug()<< "written " ;
+}
+
+
+void Grimm::rand()
+{
+    QRandomGenerator generator;
+    float sum = 0;
+
+    if (is_read)
+    {
+        measure->insert("PM", 0.0f);
+        measure->insert("PM10", 0.0f);
+        measure->insert("PM2.5", 0.0f);
+        measure->insert("PM1", 0.0f);
+
+        sample_t->insert("PM", 0);
+        sample_t->insert("PM10", 0);
+        sample_t->insert("PM2.5", 0);
+        sample_t->insert("PM1", 0);
+
+        is_read = false;
+    }
+
+       for (int i = 0; i < 3; ++i)
+       {
+           double value = generator.generateDouble();
+          // qDebug()<< "Random : " << value ;
+
+
+           if (i == 0) {
+               measure->insert("PM10",  measure->value("PM10") + value/100);
+               sample_t->insert("PM10", sample_t->value("PM10") + 1);
+           }
+
+           if (i == 1) {
+               measure->insert("PM2.5",  measure->value("PM2.5") + value/100);
+               sample_t->insert("PM2.5", sample_t->value("PM2.5") + 1);
+           }
+
+           if (i == 2) {
+               measure->insert("PM1",  measure->value("PM1") + value/100);
+               sample_t->insert("PM1", sample_t->value("PM1") + 1);
+
+           }
+
+           sum +=value;
+       }
+
+
+           measure->insert("PM",  measure->value("PM") + sum/100);
+           sample_t->insert("PM", sample_t->value("PM") + 1);
+
+
+           emit (dataIsReady(&is_read, measure, sample_t));
+
+
 }
