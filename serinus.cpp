@@ -54,7 +54,7 @@ Serinus::Serinus(QObject *parent , QString *ip, quint16 *port) : QObject (parent
     status = "";
     connected = m_sock->state();
 
-    qDebug() << "Serinus measure equipment handling has been initialized.";
+    qDebug() << "Serinus measure equipment handling has been initialized.\n\r";
 
 }
 #endif
@@ -98,7 +98,7 @@ void Serinus::readData()
 
     QByteArray data = m_sock->readAll();
 
-    qDebug() << "Serinus measure equipment data: " << data << " lenght - " << data.length() << " \n";
+    qDebug() << "Serinus measure equipment data: " << data << " lenght - " << data.length() << " \n\r";
 
     if (is_read)
     {
@@ -169,16 +169,16 @@ void Serinus::displayError(QAbstractSocket::SocketError socketError)
         break;
     case QAbstractSocket::HostNotFoundError:
         qDebug()<<   ("Serinus measure equipment handling error: The host was not found. Please check the "
-                      "host name and port settings.");
+                      "host name and port settings.\n\r");
         break;
     case QAbstractSocket::ConnectionRefusedError:
         qDebug()<< ("Serinus measure equipment handling error: The connection was refused by the peer. "
                     "Make sure the fortune server is running, "
                     "and check that the host name and port "
-                    "settings are correct.");
+                    "settings are correct.\n\r");
         break;
     default:
-        qDebug()<< ("Serinus measure equipment handling error: ") << (m_sock->errorString());
+        qDebug()<< ("Serinus measure equipment handling error: ") << (m_sock->errorString()) << "\n\r";
     }
 
     if (m_sock->isOpen())
@@ -200,7 +200,7 @@ void Serinus::sendData(int command, QByteArray *data)
     lnt = m_sock->write(_msg.toLatin1(), lnt);
     lnt = m_sock->flush();
 
-    qDebug()<< "Serinus command: " << _msg ;
+    qDebug()<< "\n\rSerinus command: " << _msg <<"\n\r" ;
 }
 
 void Serinus::writes()

@@ -92,7 +92,7 @@ Liga::Liga(QString *ip, quint16 *port)
 
         QMap<QString, float>::iterator it = measure->begin();
 
-        qDebug() << "ACA-Liga measure equipment handling has been initialized.";
+        qDebug() << "ACA-Liga measure equipment handling has been initialized.\n\r";
 
         getLastResult();
 
@@ -106,11 +106,11 @@ Liga::Liga(QString *ip, quint16 *port)
         error= false;
     } else {
         {
-            qDebug() << "ACA-Liga measure equipment handling has been initialized with issues. Not respond.";
+            qDebug() << "ACA-Liga measure equipment handling has been initialized with issues. Not respond.\n\r";
 
         }
         error = true;
-        status = "ACA-Liga measure equipment handling has been initialized with issues. Not respond.";
+        status = "ACA-Liga measure equipment handling has been initialized with issues. Not respond.\n\r";
     }
     const int j = 7120;
     m_ip = ip;

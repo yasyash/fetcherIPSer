@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright © 2018-2019 Yaroslav Shkliar <mail@ilit.ru>
  *
  * This library is free software; you can redistribute it and/or
@@ -32,7 +32,15 @@
 
 extern _App	*globalApp;
 
+QMap<QString, int> *processor::ms_range = new QMap<QString, int>;
+QMap<QString, int> *processor::ms_data = new QMap<QString, int>;
+QMap<QString, int> *processor::ms_measure = new QMap<QString, int>;
 
+//processor::ms_range->insert("Пыль общая", 1000);
+//ms_range->insert("PM1", 1000);
+//ms_range->insert("PM2.5", 1000);
+//ms_range->insert("PM4", 1000);
+//ms_range->insert("PM10", 1000);
 
 processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_parent),
     m_modbus( NULL ),
@@ -57,7 +65,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     m_ups_ip = cmdline_args.value(cmdline_args.indexOf("-upsip") +1);
     if (m_ups_ip == "")
     {
-        qDebug ( "IP address of UPS is not set.");
+        qDebug ( "IP address of UPS is not set.\n\r");
     }
     else
     {
@@ -65,7 +73,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
         m_ups_port = cmdline_args.value(cmdline_args.indexOf("-upsport") +1).toUShort();
         if (m_ups_port <= 0)
         {
-            qDebug ("UPS port error:  expected parameter");
+            qDebug ("UPS port error:  expected parameter\n\r");
         }
         else
         {
@@ -80,13 +88,13 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     QString port = cmdline_args.value(cmdline_args.indexOf("-port") +1);
     if (port == "")
     {
-        qDebug ("Fatal error:  wrong data of the port parameter");
+        qDebug ("Fatal error:  wrong data of the port parameter\n\r");
         exit(-1);
     }
 
     QString baud = cmdline_args.value(cmdline_args.indexOf("-baud") +1);
     if (baud == "")
-    {         qDebug ( "Fatal error:  wrong data of the baud parameter");
+    {         qDebug ( "Fatal error:  wrong data of the baud parameter\n\r");
 
         exit(-1);
 
@@ -94,7 +102,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
 
     QString parity = cmdline_args.value(cmdline_args.indexOf("-parity") +1).toUpper();
     if (parity == "" || parity == 'N' || parity == 'E' || parity == 'O' || parity == 'n' || parity == 'e' || parity == 'o')
-    {  qDebug ( "Fatal error:  wrong data of theparity parameter - note empty and N [n] or E [e] or O [0] - non case sensitive value");
+    {  qDebug ( "Fatal error:  wrong data of theparity parameter - note empty and N [n] or E [e] or O [0] - non case sensitive value\n\r");
         exit(-1);
 
     }
@@ -102,7 +110,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     QString dataBits = cmdline_args.value(cmdline_args.indexOf("-data") +1);
     if (dataBits == "")
     {
-        qDebug ( "Fatal error:  wrong data of the data bits parameter");
+        qDebug ( "Fatal error:  wrong data of the data bits parameter\n\r");
         exit(-1);
 
     }
@@ -110,7 +118,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     QString stopBits = cmdline_args.value(cmdline_args.indexOf("-stop") +1);
     if (stopBits == "")
     {
-        qDebug ("Fatal error: wrong data of the stop bits parameter");
+        qDebug ("Fatal error: wrong data of the stop bits parameter\n\r");
         exit(-1);
 
     }
@@ -137,7 +145,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
         if (db == "")
         {
 
-            qDebug ( "Fatal error: wrong data of the database parameter");
+            qDebug ( "Fatal error: wrong data of the database parameter\n\r");
 
         }
 
@@ -145,7 +153,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
         if (user == "")
         {
 
-            qDebug ( "Fatal error: wrong data of the user parameter");
+            qDebug ( "Fatal error: wrong data of the user parameter\n\r");
 
         }
 
@@ -153,7 +161,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
         if (pw == "")
         {
 
-            qDebug ( "Fatal error: wrong data of the password parameter");
+            qDebug ( "Fatal error: wrong data of the password parameter\n\r");
 
         }
 
@@ -196,7 +204,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     {
         releaseModbus();
 
-        qDebug ( "Fatal error: wrong data of the database parameter");
+        qDebug ( "Fatal error: wrong data of the database parameter\n\r");
         exit(-1);
 
     }
@@ -206,7 +214,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     {
         releaseModbus();
 
-        qDebug ( "Fatal error: wrong data of the user parameter");
+        qDebug ( "Fatal error: wrong data of the user parameter\n\r");
         exit(-1);
 
     }
@@ -216,7 +224,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     {
         releaseModbus();
 
-        qDebug ( "Fatal error: wrong data of the password parameter");
+        qDebug ( "Fatal error: wrong data of the password parameter\n\r");
         exit(-1);
 
     }
@@ -234,7 +242,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     {
         releaseModbus();
 
-        qDebug ( QString("Connection error: " + m_conn->lastError().text()).toLatin1().constData());
+        qDebug() << ( QString("Connection error: " + m_conn->lastError().text()).toLatin1().constData()) <<   " \n\r";
         exit(-1);
 
     }
@@ -303,13 +311,18 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     m_data = new  QMap<QString, int>;
     m_measure =  new QMap<QString, int>;
 
+    //this->ms_data = new  QMap<QString, int>;
+    //this->ms_measure =  new QMap<QString, int>;
+
+
+
     emit(AsciiPortActive(true));
 
     //alarm init
     m_alarmip = cmdline_args.value(cmdline_args.indexOf("-alarmip") +1);
     if (m_alarmip == "")
     {
-        qDebug ( "IP address of fire alarm is not set.");
+        qDebug ( "IP address of fire alarm is not set.\n\r");
     }
     else
     {
@@ -330,14 +343,14 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     m_dust_ip = cmdline_args.value(cmdline_args.indexOf("-dustip") +1);
     if (m_dust_ip == "")
     {
-        qDebug ( "IP address of dust measure equipment is not set.");
+        qDebug ( "IP address of dust measure equipment is not set.\n\r");
     }
     else
     {
         m_dust_port = cmdline_args.value(cmdline_args.indexOf("-dustport") +1).toUShort();
         if (m_dust_port <= 0)
         {
-            qDebug ( "Port of dust measure equipment is not set.");
+            qDebug ( "Port of dust measure equipment is not set.\n\r");
         }
         else
         {
@@ -354,22 +367,29 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     }
 
     // EDM init for tty...
-
-    m_grimmport = cmdline_args.value(cmdline_args.indexOf("-grimmport") +1);
-    if (m_grimmport == "")
+    m_grimm_ip = cmdline_args.value(cmdline_args.indexOf("-grimmip") +1);
+    if ( m_grimm_ip == "")
     {
-        qDebug ("Error:  wrong data of the Grimm port parameter");
+        qDebug ( "IP address of the Grimm equipment is not set.\n\r");
+    }
+    else
+    {
+        m_grimmport = cmdline_args.value(cmdline_args.indexOf("-grimmport") +1).toUShort();
+        if (m_grimmport <= 0)
+        {
+            qDebug ("Error:  wrong data of the Grimm port parameter\n\r");
 
-    } else {
+        } else {
 
-        m_grimm = new Grimm(this, &m_grimmport);
+            m_grimm = new Grimm(this, &m_grimm_ip, &m_grimmport);
 
 
-        connect(m_grimm, SIGNAL(dataIsReady(bool*, QMap<QString, float>*, QMap<QString, int>*)), this, SLOT(fillSensorData(bool*, QMap<QString, float>*, QMap<QString, int>*))); //fill several data to one sensor's base
+            //connect(m_grimm->tracker->set_data_recv_bundle, SIGNAL(dataIsReady(bool*, QMap<QString, float>*, QMap<QString, int>*)), this, SLOT(fillSensorData(bool*, QMap<QString, float>*, QMap<QString, int>*))); //fill several data to one sensor's base
+            m_grimm->setCallbackFunc(static_fillSensorData);
+
+        }
 
     }
-
-
 
 
     // Meteostation init
@@ -378,7 +398,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     m_meteo_ip = cmdline_args.value(cmdline_args.indexOf("-meteoip") +1);
     if (m_meteo_ip == "")
     {
-        qDebug ( "IP address of meteostation is not set.");
+        qDebug ( "IP address of meteostation is not set.\n\r");
     }
     else
     {
@@ -401,14 +421,14 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     m_serinus_ip = cmdline_args.value(cmdline_args.indexOf("-serinusip") +1);
     if (m_serinus_ip == "")
     {
-        qDebug ( "IP address of the Serinus is not set.");
+        qDebug ( "IP address of the Serinus is not set.\n\r");
     }
     else
     {
         m_serinus_port = cmdline_args.value(cmdline_args.indexOf("-serinusport") +1).toUShort();
         if (m_serinus_port <= 0)
         {
-            qDebug ( "Port of the Serinus is not set.");
+            qDebug ( "Port of the Serinus is not set.\n\r");
         }
         else
         {
@@ -425,14 +445,14 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     m_liga_ip = cmdline_args.value(cmdline_args.indexOf("-ligaip") +1);
     if (m_liga_ip == "")
     {
-        qDebug ( "IP address of the ACA-Liga is not set.");
+        qDebug ( "IP address of the ACA-Liga is not set.\n\r");
     }
     else
     {
         m_liga_port = cmdline_args.value(cmdline_args.indexOf("-ligaport") +1).toUShort();
         if (m_liga_port <= 0)
         {
-            qDebug ( "Port of the ACA-Liga is not set.");
+            qDebug ( "Port of the ACA-Liga is not set.\n\r");
         }
         else
         {
@@ -453,14 +473,14 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     {
         m_pollTimer->start(5000); //start polling timer with hardcoded period 5 sec.
 
-        qDebug ( "Polling time is set up to 5 sec.");
+        qDebug ( "Polling time is set up to 5 sec.\n\r");
 
     }
     else
     {
         m_pollTimer->start(polltime.toInt() * 1000);
 
-        qDebug () << "Polling time is set up to " << polltime <<" sec.";
+        qDebug () << "Polling time is set up to " << polltime <<" sec.\n\r";
     }
 
 
@@ -470,6 +490,8 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
 
     //range coefficients init
     m_range = new QMap<QString, int>;
+    //this-> ms_range = new QMap<QString, int>;
+
     m_range->insert("CO", 10);
     m_range->insert("NO2", 1000);
     m_range->insert("NO", 1000);
@@ -479,13 +501,6 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     m_range->insert("O3", 1000);
     m_range->insert("NH3", 1000);
 
-
-    m_range->insert("Пыль общая", 1000);
-    m_range->insert("PM", 1000);
-    m_range->insert("PM1", 1000);
-    m_range->insert("PM2.5", 1000);
-    m_range->insert("PM4", 1000);
-    m_range->insert("PM10", 1000);
 
     m_range->insert("бензол", 1000);
     m_range->insert("толуол", 1000);
@@ -510,7 +525,14 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     m_data->insert("Напряжение макс.", m_ups->voltage);
     //m_measure->insert("Напряжение макс.", 1);
 
+    ms_range->insert("PM", 1000000);
+    ms_range->insert("PM1", 1000000);
+    ms_range->insert("PM2.5", 1000000);
+    ms_range->insert("PM4", 1000000);
+    ms_range->insert("PM10", 1000000);
 
+    //Grimm listening confiramtion
+    m_grimm->send_go();
 }
 
 
@@ -715,7 +737,7 @@ void processor::sendModbusRequest( void )
             {
                 if( writeAccess )
                 {
-                    qDebug() <<  tr( "Values successfully sent" ) ;
+                    qDebug() <<  tr( "Values successfully sent\n\r" ) ;
 
                 }
                 else
@@ -804,7 +826,7 @@ void processor::sendModbusRequest( void )
                                 m_data->insert(tmp_type_measure, tmp + QString::number(data, 16).toInt() );
                                 cnt = m_measure->value(tmp_type_measure, 0);
                                 m_measure->insert(tmp_type_measure, cnt+1);
-                                qDebug()<<  "measure... \n type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt()/m_range->value(tmp_type_measure);
+                                qDebug()<<  "measure... \n type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt()/m_range->value(tmp_type_measure)<<"\n\r";
 
                             }
                             break;
@@ -823,13 +845,13 @@ void processor::sendModbusRequest( void )
                                 if (_type == 7){ name = "NO"; //detect type of sensor HARDCODED
                                     if (_mode == 7) md = "change sensor";
                                     else
-                                    {md = (_mode ?  "off" :  "measuring");};
+                                    {md = (_mode ?  "off" :  "measuring\n\r");};
                                 }
 
                                 if (_type == 3){ name = "H2S"; //detect type of sensor HARDCODED
-                                    if (_mode == 7) md = "change sensor";
+                                    if (_mode == 7) md = "change sensor\n\r";
                                     else
-                                    {md = (_mode ?  "off" :  "measuring");};
+                                    {md = (_mode ?  "off" :  "measuring\n\r");};
                                 }
                             } else {
 
@@ -842,8 +864,8 @@ void processor::sendModbusRequest( void )
                             tmp_type_measure = name;
 
                             uint8_t _number = (data >> 12) & 0xF;
-                            QTextStream(&result) << name << " : " << md << " : " << _number;
-                            qDebug() << result;
+                            QTextStream(&result) << name << " : " << md << " : " << _number <<"\n\r";
+                            qDebug() << result ;
 
 
                             break;
@@ -852,20 +874,20 @@ void processor::sendModbusRequest( void )
                             QString result;
                             int tmp, cnt;
 
-                            QTextStream(&result) << float (data)/m_range->value(tmp_type_measure) << " mg/m3";
+                            QTextStream(&result) << float (data)/m_range->value(tmp_type_measure) << " mg/m3\n\r";
 
 
                             tmp = m_data->value(tmp_type_measure, -1); //detect first measure
                             if ( tmp == -1){
                                 m_data->insert(tmp_type_measure, QString::number(data, 16).toInt()); // insert into QMap ordering pair of measure first time
                                 m_measure->insert(tmp_type_measure, 1);
-                                qDebug() << "measure... \n type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt()/m_range->value(tmp_type_measure);
+                                qDebug() << "measure... \n type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt()/m_range->value(tmp_type_measure) <<"\n\r";
 
                             } else {
                                 m_data->insert(tmp_type_measure, tmp + QString::number(data, 16).toInt() );
                                 cnt = m_measure->value(tmp_type_measure, 0);
                                 m_measure->insert(tmp_type_measure, cnt+1);
-                                qDebug()<<  "measure... \n type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt()/m_range->value(tmp_type_measure);
+                                qDebug()<<  "measure... \n\r type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt()/m_range->value(tmp_type_measure)<<"\n\r";
 
                             }
                             break;
@@ -881,14 +903,14 @@ void processor::sendModbusRequest( void )
 
                                 if (_mode == 2) md = "fault";
                                 else
-                                {md = (_mode ?  "off" :  "measuring");};
+                                {md = (_mode ?  "off" :  "measuring \n\r");};
 
                                 uint8_t _type = (data >> 8) & 0xF;
                                 if (_type != 0){
                                     if (_type == 1){ name = "NH3"; //detect type of sensor HARDCODED
-                                        if (_mode == 7) md = "change sensor";
+                                        if (_mode == 7) md = "change sensor \n\r";
                                         else
-                                        {md = (_mode ?  "off" :  "measuring");};
+                                        {md = (_mode ?  "off" :  "measuring \n\r");};
                                     }
                                 } else{
                                     _type = (data ) & 0xF; //in case of only one byte for some equipments
@@ -899,14 +921,14 @@ void processor::sendModbusRequest( void )
                                 tmp_type_measure = name;
 
                                 uint8_t _number = (data >> 12) & 0xF;
-                                QTextStream(&result) << name << " : " << md << " : " << _number;
+                                QTextStream(&result) << name << " : " << md << " : " << _number <<"\n\r";
                                 qDebug() << result;
 
 
 
                             } else {
 
-                                QTextStream(&result) << float (data) << " %";
+                                QTextStream(&result) << float (data) << " %\n\r";
 
 
                                 str = "Ресурс сенс. " % tmp_type_measure;
@@ -916,13 +938,13 @@ void processor::sendModbusRequest( void )
 
                                     m_data->insert(str, QString::number(data, 16).toInt()); // insert into QMap ordering pair of measure first time
                                     m_measure->insert(str, 1);
-                                    qDebug() << "measure... \n type= " << str << " value = " << (float)QString::number(data, 16).toInt() << " %";
+                                    qDebug() << "measure... \n type= " << str << " value = " << (float)QString::number(data, 16).toInt() << " %\n\r";
 
                                 } else {
                                     m_data->insert(str, tmp + QString::number(data, 16).toInt());
                                     cnt = m_measure->value(str, 0);
                                     m_measure->insert(str, cnt+1);
-                                    qDebug()<<  "measure... \n type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt() << " %";
+                                    qDebug()<<  "measure... \n\r type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt() << " %\n\r";
 
                                 }
                             }
@@ -932,20 +954,20 @@ void processor::sendModbusRequest( void )
                             QString result;
                             int tmp, cnt;
 
-                            QTextStream(&result) << float (data)/m_range->value(tmp_type_measure) << " mg/m3";
+                            QTextStream(&result) << float (data)/m_range->value(tmp_type_measure) << " mg/m3\n\r";
 
 
                             tmp = m_data->value(tmp_type_measure, -1); //detect first measure
                             if ( tmp == -1){
                                 m_data->insert(tmp_type_measure, QString::number(data, 16).toInt()); // insert into QMap ordering pair of measure first time
                                 m_measure->insert(tmp_type_measure, 1);
-                                qDebug() << "measure... \n type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt()/m_range->value(tmp_type_measure);
+                                qDebug() << "measure... \n\r type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt()/m_range->value(tmp_type_measure)<< "\n\r";
 
                             } else {
                                 m_data->insert(tmp_type_measure, tmp + QString::number(data, 16).toInt() );
                                 cnt = m_measure->value(tmp_type_measure, 0);
                                 m_measure->insert(tmp_type_measure, cnt+1);
-                                qDebug()<<  "measure... \n type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt()/m_range->value(tmp_type_measure);
+                                qDebug()<<  "measure... \n\r type= " << tmp_type_measure << " value = " << (float)QString::number(data, 16).toInt()/m_range->value(tmp_type_measure) << "\n\r";
 
                             }
                             break;
@@ -970,9 +992,9 @@ void processor::sendModbusRequest( void )
                             errno == EIO
                             )
                     {
-                        err += tr( "I/O error" );
+                        err += tr( "\n\rI/O error" );
                         err += ": ";
-                        err += tr( "did not receive any data from slave." );
+                        err += tr( "did not receive any data from slave.\n\r" );
                         q_poll[slave.key() - 1] --;
                         if (q_poll[slave.key() - 1]==0)
                         {
@@ -986,7 +1008,7 @@ void processor::sendModbusRequest( void )
                         err += ": ";
                         err += tr( "Slave threw exception '" );
                         err += modbus_strerror( errno );
-                        err += tr( "' or function not implemented." );
+                        err += tr( "' or function not implemented.\n\r" );
 
                         if (errno == EMBXILADD)  slave.value()--; //in case the number registers is too much
                         q_poll[slave.key() - 1] --;
@@ -1002,16 +1024,16 @@ void processor::sendModbusRequest( void )
                     err += tr( "Protocol error" );
                     err += ": ";
                     err += tr( "Number of registers returned does not "
-                               "match number of registers requested!" );
+                               "match number of registers requested!\n\r" );
                 }
 
                 if(( err.size() > 0 ) )
                     if (verbose){
-                        qDebug()<< QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss ") <<"Slave ID = " << slave.key() << "\n"<< err;
+                        qDebug()<< QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss ") <<"\n\rSlave ID = " << slave.key() << "\n\r"<< err << "\n\r";
                     }
                     else
                     {
-                        qDebug() << QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss ") <<"Slave ID = " << slave.key() <<" is not detected.";
+                        qDebug() << QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss ") <<"\n\rSlave ID = " << slave.key() <<" is not detected.\n\r";
                     }
             }
         }
@@ -1072,7 +1094,7 @@ void processor::busMonitorRawData( uint8_t * data, uint8_t dataLen, bool addNewl
             //dump += "\n";
         }
         else {
-            qDebug() << "Raw data:  " << dump;
+            qDebug() << "Raw data:  " << dump <<"\n\r";
         }
     }
 }
@@ -1171,18 +1193,19 @@ void processor::renovateSlaveID( void )
         }
     }
 
-    //if (!m_grimm->connected)
-    //{
-    if ( (m_grimmport != "") ){
+   // if (!m_grimm->connected)
+   // {
+        m_grimm->reOpen(&m_grimm_ip, &m_grimmport);
+    //- if ( (m_grimmport > 0) ){
 
-        m_grimm->reOpen();
-        //m_grimm->~Grimm();
-        //m_grimm = new Grimm(this, &m_grimmport);
-        //connect(m_grimm, SIGNAL(dataIsReady(bool*, QMap<QString, float>*, QMap<QString, int>*)), this, SLOT(fillSensorData(bool*, QMap<QString, float>*, QMap<QString, int>*))); //fill several data to one sensor's base
+    //  -   m_grimm->reOpen();
+    //m_grimm->~Grimm();
+    //m_grimm = new Grimm(this, &m_grimmport);
+    //connect(m_grimm, SIGNAL(dataIsReady(bool*, QMap<QString, float>*, QMap<QString, int>*)), this, SLOT(fillSensorData(bool*, QMap<QString, float>*, QMap<QString, int>*))); //fill several data to one sensor's base
 
 
-        //  }
-    }
+    //  }
+    //}
 
 }
 void processor::squeezeAlarmMsg()
@@ -1296,24 +1319,24 @@ void processor::transactionDB(void)
 
         if(!m_conn->isOpen())
         {
-            qDebug() << "Unable to reopen database connection!";
+            qDebug() << "Unable to reopen database connection!\n\r";
         }
         else
         {
             if (verbose)
             {
-                qDebug() << "Transaction status to the Fire Alarm table is " << ((query.exec() == true) ? "successful!" :  "not complete!");
-                qDebug() << "The last error is " << (( query.lastError().text().trimmed() == "") ? "absent" : query.lastError().text());
+                qDebug() << "Transaction status to the Fire Alarm table is " << ((query.exec() == true) ? "successful!" :  "not complete!\n\r");
+                qDebug() << "The last error is " << (( query.lastError().text().trimmed() == "") ? "absent" : query.lastError().text())<<"\n\r";
             }
             else
             {
                 if (query.exec())
                 {
-                    qDebug() << "Insertion to the Fire Alarm table is successful!";
+                    qDebug() << "Insertion to the Fire Alarm table is successful!\n\r";
                 }
                 else
                 {
-                    qDebug() << "Insertion to the Fire Alarm table is not successful!";
+                    qDebug() << "Insertion to the Fire Alarm table is not successful!\n\r";
 
                 }
             }
@@ -1356,18 +1379,18 @@ void processor::transactionDB(void)
         {
             if (verbose)
             {
-                qDebug() << "Transaction status to the meteostation's table is " << ((query.exec() == true) ? "successful!" :  "not complete!");
-                qDebug() << "The last error is " << (( query.lastError().text().trimmed() == "") ? "absent" : query.lastError().text());
+                qDebug() << "Transaction status to the meteostation's table is " << ((query.exec() == true) ? "successful!" :  "not complete!\n\r");
+                qDebug() << "The last error is " << (( query.lastError().text().trimmed() == "") ? "absent" : query.lastError().text()) << "\n\r";
             }
             else
             {
                 if (query.exec())
                 {
-                    qDebug() << "Insertion to the meteostation's table is successful!";
+                    qDebug() << "Insertion to the meteostation's table is successful!\n\r";
                 }
                 else
                 {
-                    qDebug() << "Insertion to the meteostation's table is not successful!";
+                    qDebug() << "Insertion to the meteostation's table is not successful!\n\r";
 
                 }
             }
@@ -1399,11 +1422,11 @@ void processor::transactionDB(void)
 
     } else { if (m_liga->error)
         {
-        query_log.bindValue(":date_time", tmp_time );
-        query_log.bindValue( ":type", 404 );
-        query_log.bindValue(":descr", "Хроматограф на посту  " + QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")) + " работает с ошибкой." + m_liga->status  );
+            query_log.bindValue(":date_time", tmp_time );
+            query_log.bindValue( ":type", 404 );
+            query_log.bindValue(":descr", "Хроматограф на посту  " + QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")) + " работает с ошибкой." + m_liga->status  );
 
-        query_log.exec();
+            query_log.exec();
 
         }
 
@@ -1412,76 +1435,98 @@ void processor::transactionDB(void)
 
 
     //Sensor data processing
+    bool is_static = false; // for PM static array indication
 
     for (sensor = m_uuid->begin(); sensor != m_uuid->end(); ++sensor)
     {
         _key = sensor.key();
 
-        if (sensor.key() == "Пыль общая")
+        if ((sensor.key() == "Пыль общая") || (sensor.key() == "PM1") || (sensor.key() == "PM2.5") || (sensor.key() == "PM4") || (sensor.key() == "PM10"))
         {
-            val = m_data->value("PM", -1); //Hardcoded for Cyrillic name of Dust total
-            _key = "PM";
-
+            if(sensor.key() == "Пыль общая"){
+                val = ms_data->value("PM", -1); //Hardcoded for Cyrillic name of Dust total
+                _key = "PM";
+            } else {
+                val = ms_data->value(sensor.key(), -1);
+                _key = sensor.key();
+            }
+            is_static = true;
         } else {
 
             val = m_data->value(sensor.key(), -1);
+            _key = sensor.key();
         }
 
 
-        if ((val != -1)&& (m_measure->value(_key) > 0 )){
+
+        if ((val != -1)&& ((m_measure->value(_key) > 0 ) || is_static)){
             //QSqlQuery query = QSqlQuery(*m_conn);
+            int _samples = m_measure->value(sensor.key(), 1);
+
             query.prepare("INSERT INTO sensors_data (idd, serialnum, date_time, typemeasure, measure, is_alert) "
                           "VALUES (:idd, :serialnum, :date_time, :typemeasure, :measure, false)");
 
             if ((sensor.key().indexOf("PM")!= -1) || (sensor.key().indexOf("Пыль общая")!= -1))
             {
-                average = (float (val)) / m_measure->value(sensor.key(), 1) / m_range->value(sensor.key()); //for dust measure range is less
-                if (sensor.key() == "Пыль общая")
+                //average = (float (val)) / m_measure->value(sensor.key(), 1) / m_range->value(sensor.key()); //for dust measure range is less
+                //if (sensor.key() == "Пыль общая")
+                // {
+                //    average = (float (val)) / m_measure->value("PM", 1) /m_range->value(sensor.key()); //Hardcoded for Cyrillic name of Dust total
+
+                //} else {
+
+                //     average = (float (val)) / m_measure->value(sensor.key(), 1) / 1000; //for dust measure range is less
+                //}
+
+                if (is_static)
                 {
-                    average = (float (val)) / m_measure->value("PM", 1) /m_range->value(sensor.key()); //Hardcoded for Cyrillic name of Dust total
+                    average = (float (val)) / ms_measure->value(_key, 1) / ms_range->value(_key, 1); //for dust measure range from static array
+                    _samples = ms_measure->value(_key, 1);
 
-                } else {
-
-                    average = (float (val)) / m_measure->value(sensor.key(), 1) / 1000; //for dust measure range is less
+                    ms_data->remove(_key);
+                    ms_measure->remove(_key);
                 }
 
             }
             else
             {
                 average = (float (val)) / m_measure->value(sensor.key(), 1) /m_range->value(sensor.key());
+
             }
+
+
 
             query.bindValue(":idd", QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")));
             query.bindValue(":serialnum",  QString(m_uuid->value(sensor.key()).toString()).remove(QRegExp("[\\{\\}]")));
             query.bindValue(":date_time", tmp_time);
             query.bindValue(":typemeasure",sensor.key());
             query.bindValue(":measure", average );
-            qDebug() << "\nTransaction prepare: \n idd === "<< QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")) << "\n serial === " <<  QString(m_uuid->value(sensor.key()).toString()).remove(QRegExp("[\\{\\}]")) <<
-                        "\n date_time ===" << QDateTime::currentDateTime().toString( "yyyy-MM-ddThh:mm:ss") << "\n typemeasure " <<  sensor.key() <<
-                        "\n measure ===" <<average << " and samples === " << m_measure->value(sensor.key(), 1);
+            qDebug() << "\n\rTransaction prepare: \n\r idd === "<< QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")) << "\n\r serial === " <<  QString(m_uuid->value(sensor.key()).toString()).remove(QRegExp("[\\{\\}]")) <<
+                        "\n\r date_time ===" << QDateTime::currentDateTime().toString( "yyyy-MM-ddThh:mm:ss") << "\n\r typemeasure " <<  sensor.key() <<
+                        "\n\r measure ===" <<average << " and samples === " << _samples <<"\n\r";
             if (!m_conn->isOpen())
                 m_conn->open();
 
             if(!m_conn->isOpen())
             {
-                qDebug() << "Unable to reopen database connection!";
+                qDebug() << "Unable to reopen database connection!\n\r";
             }
             else
             {
                 if (verbose)
                 {
-                    qDebug() << "Transaction status is " << ((query.exec() == true) ? "successful!" :  "not complete!");
-                    qDebug() << "The last error is " << (( query.lastError().text().trimmed() == "") ? "absent" : query.lastError().text());
+                    qDebug() << "Transaction status is " << ((query.exec() == true) ? "successful!\n\r" :  "not complete! \n\r");
+                    qDebug() << "The last error is " << (( query.lastError().text().trimmed() == "") ? "absent " : query.lastError().text()) << "\n\r";
                 }
                 else
                 {
                     if (query.exec())
                     {
-                        qDebug() << "Insertion is successful!";
+                        qDebug() << "Insertion is successful!\n\r";
                     }
                     else
                     {
-                        qDebug() << "Insertion is not successful!";
+                        qDebug() << "Insertion is not successful!\n\r";
 
                     }
                 }
@@ -1521,7 +1566,7 @@ void processor::startTransactTimer( QSqlDatabase *conn) //start by signal dbForm
 
     //m_conn = conn;
     QSqlQuery *query= new QSqlQuery ("select * from equipments where is_present = 'true' and measure_class = 'data' order by date_time_in", *conn);
-    qDebug() << "Devices have been added, status is " <<   query->isActive()<< " and err " << query->lastError().text();
+    qDebug() << "Devices have been added, status is " <<   query->isActive()<< " and err " << query->lastError().text() << "\n\r";
     query->first();
     QSqlRecord rec = query->record();
 
@@ -1533,7 +1578,7 @@ void processor::startTransactTimer( QSqlDatabase *conn) //start by signal dbForm
 
     for (int i = 0; i < query->size(); i++ )
     {
-        qDebug() << query->value("typemeasure").toString() << "  -----  "<< query->value("serialnum").toUuid();
+        qDebug() << query->value("typemeasure").toString() << "  -----  "<< query->value("serialnum").toUuid() <<"\n\r";
 
         m_uuid->insert( query->value("typemeasure").toString(), query->value("serialnum").toUuid());
         query->next();
@@ -1565,7 +1610,7 @@ void processor::readSocketStatus()
         m_dust->sendData( "@");
         //while (!m_dust->is_read);
         m_dust->is_read = false;
-        qDebug() << "count " << dust.length();
+        qDebug() << "count " << dust.length() <<"\n\r";
 
         for (int i = 0; i < dust.length(); i++)
         {
@@ -1578,14 +1623,14 @@ void processor::readSocketStatus()
                 {
                     m_data->insert(tmp_type_measure, m_dust->measure->value(tmp_type_measure)); // insert into QMap ordering pair of measure first time
                     m_measure->insert(tmp_type_measure, 1);
-                    qDebug() << "measure... " << tmp_type_measure << " value = " << (float)m_dust->measure->value(tmp_type_measure)/m_range->value(tmp_type_measure);
+                    qDebug() << "measure... " << tmp_type_measure << " value = " << (float)m_dust->measure->value(tmp_type_measure)/m_range->value(tmp_type_measure) <<"\n\r";
                 }
             } else {
                 if (m_dust->measure->value(tmp_type_measure) >0)
                 {
                     m_data->insert(tmp_type_measure, tmp + m_dust->measure->value(tmp_type_measure));
                     m_measure->insert(tmp_type_measure, m_measure->value(tmp_type_measure, 0) +1); //increment counter
-                    qDebug() << "measure... " << tmp_type_measure << " value = " << (float)m_dust->measure->value(tmp_type_measure)/m_range->value(tmp_type_measure);
+                    qDebug() << "measure... " << tmp_type_measure << " value = " << (float)m_dust->measure->value(tmp_type_measure)/m_range->value(tmp_type_measure) <<"\n\r";
                 }
             }
         }
@@ -1625,7 +1670,7 @@ void processor::readSocketStatus()
 
     //Alarm data reading
 
-    qDebug() << "Alarm messages is  "<< m_fire->surgardI->m_event->count();
+    qDebug() << "Alarm messages is  "<< m_fire->surgardI->m_event->count() <<"\n\r";
 
     // Read Serinus status
     if (m_serinus->connected)
@@ -1685,3 +1730,20 @@ void processor::fillSensorData( bool *_is_read, QMap<QString, float> *_measure)
 
 }
 
+void processor::static_fillSensorData(bool *_is_read, QMap<QString, float> *_measure, QMap<QString, int> *_sample)
+{
+    QMap<QString, float>::iterator sensor;
+
+
+
+    for (sensor = _measure->begin(); sensor != _measure->end(); ++sensor)
+    {
+
+        ms_data->insert(sensor.key(),  ms_data->value(sensor.key()) + int(_measure->value(sensor.key()) *ms_range->value(sensor.key())) );
+        ms_measure->insert(sensor.key(), ms_measure->value(sensor.key()) + 1);
+        _measure->insert(sensor.key(), 0 );
+        _measure->insert(sensor.key(), 0);
+    }
+    *_is_read = true;
+
+}

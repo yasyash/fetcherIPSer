@@ -44,6 +44,8 @@ public:
     processor(QObject *_parent = 0,  QStringList *cmdline = 0 );
     ~processor();
 
+
+
     static void stBusMonitorAddItem( modbus_t * modbus,
                                      uint8_t isOut, uint8_t slave, uint8_t func, uint16_t addr,
                                      uint16_t nb, uint16_t expectedCRC, uint16_t actualCRC );
@@ -54,6 +56,10 @@ public:
 
     void releaseModbus(void);
     virtual modbus_t*  modbus() { return m_serialModbus; }
+public:
+    static QMap<QString, int>   * ms_data; //assosiative array of polling data
+    static QMap<QString, int>   * ms_measure; //assosiative array of measurement quantities
+    static QMap<QString, int>   * ms_range; //assosiative array of measurement equipments range
 
 signals:
     void AsciiPortActive(bool active);
@@ -66,6 +72,7 @@ public slots:
     }
     void fillSensorData( bool *_is_read, QMap<QString, float> *_measure, QMap<QString, int> *_sample); //sensor equipment type or name
     void fillSensorData( bool *_is_read, QMap<QString, float> *_measure); //polymorphic method for slow measuring
+    static void static_fillSensorData(  bool *_is_read, QMap<QString, float> *_measure, QMap<QString, int> *_sample);
 
 private slots:
     void sendModbusRequest( void ); //update data view
@@ -93,6 +100,7 @@ private:
     QMap<QString, int>   * m_data; //assosiative array of polling data
     QMap<QString, int>   * m_measure; //assosiative array of measurement quantities
     QMap<QString, int>   * m_range; //assosiative array of measurement equipments range
+
     QMap<QString, QUuid>   * m_uuid; //assosiative array of sensors uuid
     //QList<int> *m_pool;
     QMap<int, int> *m_pool; //assosiative array of polling slave address - number of registers
@@ -128,12 +136,13 @@ private:
     QString m_meteo_ip;
     quint16 m_meteo_port;
 
-    Serinus     *m_serinus; //member for Serinus
+    Serinus *m_serinus; //member for Serinus
     QString m_serinus_ip;
     quint16 m_serinus_port;
 
     Grimm *m_grimm; //member for Grimm
-    QString m_grimmport;
+    QString m_grimm_ip;
+    quint16 m_grimmport;
 
     Liga     *m_liga; //member for ACA-Liga
     QString m_liga_ip;

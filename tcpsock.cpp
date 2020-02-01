@@ -43,9 +43,9 @@ TcpSock::TcpSock(QObject *parent , QString *ip, quint16 *port) : QObject (parent
         connect(m_srv, SIGNAL(acceptError(QAbstractSocket::SocketError)), this, SLOT(displayError(QAbstractSocket::SocketError)));
 
         //changeInterface(*ip, *port);
-        qDebug() << "Fire Alarm handling has been initialized.";
+        qDebug() << "Fire Alarm handling has been initialized." << "\n\r";
     } else {
-        qDebug() << "Fire Alarm handling initialization error.";
+        qDebug() << "Fire Alarm handling initialization error."<< "\n\r";
 
     }
 
@@ -68,7 +68,7 @@ void TcpSock::acceptConnection()
 {
     m_sock = m_srv->nextPendingConnection();
     if (!m_sock) {
-        qDebug() << (tr("Error: got invalid pending connection from Kros-gate!"));
+        qDebug() << (tr("Error: got invalid pending connection from Kros-gate!"))<< "\n\r";
         return;
     }
 
@@ -103,7 +103,7 @@ void TcpSock::readData()
    // QByteArray data = m_sock->readAll();
     QByteArray data = m_sock->readAll();
 
-    qDebug() << "Alarm raw data: " << data << " lenght - " << data.length() << " \n";
+    qDebug() << "Alarm raw data: " << data << " lenght - " << data.length() << "\n\r";
 if (m_sock->atEnd())
     m_sock->write("\6");
 //data="";
@@ -124,16 +124,16 @@ void TcpSock::displayError(QAbstractSocket::SocketError socketError)
         break;
     case QAbstractSocket::HostNotFoundError:
         qDebug()<<   ("Fire Alarm handling error: The host was not found. Please check the "
-                      "host name and port settings.");
+                      "host name and port settings.")<< "\n\r";
         break;
     case QAbstractSocket::ConnectionRefusedError:
         qDebug()<< ("Fire Alarm handling error: The connection was refused by the peer. "
                     "Make sure the fortune kros-gate daemon is running, "
                     "and check that the host name and port "
-                    "settings are correct.");
+                    "settings are correct.")<< "\n\r";
         break;
     default:
-        qDebug()<< ("Fire Alarm handling error: ") << (m_sock->errorString());
+        qDebug()<< ("Fire Alarm handling error: ") << (m_sock->errorString())<< "\n\r";
     }
     if (m_sock->isOpen())
         m_sock->close();

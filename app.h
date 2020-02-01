@@ -32,7 +32,6 @@ public:
     ThreadedObject <processor>	_obj;
 
 
-
 protected:
     void timerEvent (QTimerEvent *ev)
     {

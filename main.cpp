@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     _App app;                    // application object
+
     bool res;							// success ops flag
     globalApp = &app;
     app.startTimer(0);

@@ -69,7 +69,7 @@ MeteoTcpSock::MeteoTcpSock(QObject *parent , QString *ip, quint16 *port) : QObje
     connected = m_sock->state();
 
 
-    qDebug() << "Meteostation handling has been initialized.";
+    qDebug() << "Meteostation handling has been initialized.\n\r";
 
 }
 #endif
@@ -115,7 +115,7 @@ void MeteoTcpSock::readData()
 
     QByteArray data = m_sock->readAll();
 
-    qDebug() << "Meteostation sent data: " << data << " lenght - " << data.length() << " \n";
+    qDebug() << "Meteostation sent data: " << data << " lenght - " << data.length() << " \n\r";
 
     this->is_read = true;
 
@@ -179,16 +179,16 @@ void MeteoTcpSock::displayError(QAbstractSocket::SocketError socketError)
         break;
     case QAbstractSocket::HostNotFoundError:
         qDebug()<<   ("Meteostation handling error: The host was not found. Please check the "
-                      "host name and port settings.");
+                      "host name and port settings.\n\r");
         break;
     case QAbstractSocket::ConnectionRefusedError:
         qDebug()<< ("Meteostation handling error: The connection was refused by the peer. "
                     "Make sure the fortune server is running, "
                     "and check that the host name and port "
-                    "settings are correct.");
+                    "settings are correct.\n\r");
         break;
     default:
-        qDebug()<< ("Meteostation handling error: ") << (m_sock->errorString());
+        qDebug()<< ("Meteostation handling error: ") << (m_sock->errorString())<<"\n\r";
     }
     if (m_sock->isOpen())
         m_sock->close();
@@ -209,7 +209,7 @@ void MeteoTcpSock::sendData( char *data)
     lnt = m_sock->write(str, lnt);
     // lnt = m_sock->flush();
 
-    qDebug()<< "Meteostation command: " << data ;
+    qDebug()<< "Meteostation command: " << data <<"\n\r";
 }
 
 void MeteoTcpSock::writes()

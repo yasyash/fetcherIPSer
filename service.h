@@ -81,7 +81,7 @@ public:
         _s = 1;
         _mem = 2;
         int i =sizeof((_param));
-        qDebug()<< *_param;
+        qDebug()<< *_param<< "\n\r";
         start (Priority);	// create of an object
     }
     void run (void)
@@ -89,6 +89,13 @@ public:
         int tmp = _mem;
         QStringList arg= QCoreApplication::arguments();
         initObject (_obj = new T(nullptr, &arg));
+
+
+        //ms_range->insert("Пыль общая", 1000);
+        //ms_range->insert("PM1", 1000);
+        //ms_range->insert("PM2.5", 1000);
+        //ms_range->insert("PM4", 1000);
+        //ms_range->insert("PM10", 1000);
         exec ();
     } // T obj init
     //state

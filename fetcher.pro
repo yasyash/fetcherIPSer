@@ -34,7 +34,8 @@ SOURCES += \
         liga.cpp\
         soapC.cpp\
         soapWSHttpBinding_USCOREIAutoChromWCFHostProxy.cpp\
-        stdsoap2.cpp
+        stdsoap2.cpp\
+        qtelnet.cpp
 
 
 
@@ -57,7 +58,8 @@ HEADERS +=\
     soapH.h \
     soapStub.h \
     WSHttpBinding_USCOREIAutoChromWCFHost.nsmap \
-    wsa5.h
+    wsa5.h\
+    qtelnet.h
 
 
 
@@ -92,4 +94,4 @@ DEFINES += DUSTTCP_H
 
 
 
-LIBS += -lnetsnmp -lnetsnmpmibs #-lqt-net-snmp
+LIBS += -lnetsnmp -ltelnet -lnetsnmpmibs  #-lqt-net-snmp

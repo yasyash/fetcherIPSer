@@ -52,7 +52,7 @@ DustTcpSock::DustTcpSock(QObject *parent , QString *ip, quint16 *port) : QObject
     status = "";
     connected = m_sock->state();
 
-    qDebug() << "Dust measure equipment handling via TCP/IP has been initialized.";
+    qDebug() << "Dust measure equipment handling via TCP/IP has been initialized.\n\r";
 
 }
 #endif
@@ -163,7 +163,7 @@ void DustTcpSock::readData()
             default: break;
         }
 
-        qDebug() << "Dust measure equipment via TCP/IP data: " << data << " lenght - " << data.length() << " \n";
+        qDebug() << "Dust measure equipment via TCP/IP data: " << data << " lenght - " << data.length() << " \n\r";
 
         this->is_read = true;
 
@@ -181,16 +181,16 @@ void DustTcpSock::readData()
             break;
         case QAbstractSocket::HostNotFoundError:
             qDebug()<<   ("Dust measure equipment handling error: The host was not found. Please check the "
-                          "host name and port settings.");
+                          "host name and port settings.\n\r");
             break;
         case QAbstractSocket::ConnectionRefusedError:
             qDebug()<< ("Dust measure equipment handling error: The connection was refused by the peer. "
                         "Make sure the fortune server is running, "
                         "and check that the host name and port "
-                        "settings are correct.");
+                        "settings are correct.\n\r");
             break;
         default:
-            qDebug()<< ("Dust measure equipment handling error: ") << (m_sock->errorString());
+            qDebug()<< ("Dust measure equipment handling error: ") << (m_sock->errorString())<<"\n\r";
         }
 
         if (m_sock->isOpen())
@@ -225,7 +225,7 @@ void DustTcpSock::readData()
         lnt = m_sock->write(str, lnt);
          lnt = m_sock->flush();
 
-        qDebug()<< "Dust command: " << data ;
+        qDebug()<< "\n\r Dust command: " << data <<"\n\r" ;
     }
 
     void DustTcpSock::writes()

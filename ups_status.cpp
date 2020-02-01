@@ -60,7 +60,7 @@ ups_status::ups_status( QString *ip, quint16 *port, QString *ups_username)
         //snmp_sess_perror("ack", &session);
         //SOCK_CLEANUP;
         //exit(1);
-        qDebug() << "Error opening SNMP library...";
+        qDebug() << "Error opening SNMP library..."<< "\n\r";
         return;
     }
 
@@ -79,11 +79,11 @@ ups_status::ups_status( QString *ip, quint16 *port, QString *ups_username)
          */
 
         if (status == STAT_SUCCESS)
-            qDebug() << "Error in packet\n Reason: \n" << snmp_errstring(response->errstat);
+            qDebug() << "Error in packet\n Reason: \n" << snmp_errstring(response->errstat)<< "\n\r";
         else if (status == STAT_TIMEOUT)
-            qDebug() << "Timeout: No response from \n" <<      session.peername;
+            qDebug() << "Timeout: No response from \n" <<      session.peername<< "\n\r";
         else
-            qDebug() << "Somethig error: " << ss;
+            qDebug() << "Somethig error: " << ss<< "\n\r";
 
     }
 
@@ -114,9 +114,9 @@ err_count--;
     sample_t = 0;
     measure = new  QMap<QString, int>;
 if (err_count==0)
-    qDebug() << "UPS SNMP monitoring initialization complete.";
+    qDebug() << "UPS SNMP monitoring initialization complete."<< "\n\r";
 else {
-    qDebug() << "UPS SNMP monitoring initialization with issues..";
+    qDebug() << "UPS SNMP monitoring initialization with issues.."<< "\n\r";
 
 }
 }
@@ -148,7 +148,7 @@ variable_list * ups_status::get_data(char * mib)
     if (!read_objid(mib, anOID, &anOID_len)) {
         //snmp_perror("read_objid");
         // exit(1);
-        qDebug() << "Unexpected problem while getting object ID via SNMP...";
+        qDebug() << "Unexpected problem while getting object ID via SNMP..."<< "\n\r";
         return nullptr;
     }
 

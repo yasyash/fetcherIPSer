@@ -234,13 +234,13 @@ void surgard::setData(QByteArray &data)
         QByteArray group = data.mid(15, 2);
         QByteArray chain = data.mid(17, 3);
 
-        qDebug() << "Fire alarm channel: " << (chnl_in);
-        qDebug() << "Fire alarm line: " << (line);
-        qDebug() << "Fire alarm equipment code: " << (equip_id);
-        qDebug() << "Fire alarm flag: " << (flag);
-        qDebug() << "Fire alarm event: " << (event);
-        qDebug() << "Fire alarm group: " << (group);
-        qDebug() << "Fire alarm chain: " << (chain);
+        qDebug() << "Fire alarm channel: " << (chnl_in) << "\n\r";
+        qDebug() << "Fire alarm line: " << (line)<< "\n\r";
+        qDebug() << "Fire alarm equipment code: " << (equip_id)<< "\n\r";
+        qDebug() << "Fire alarm flag: " << (flag)<< "\n\r";
+        qDebug() << "Fire alarm event: " << (event)<< "\n\r";
+        qDebug() << "Fire alarm group: " << (group)<< "\n\r";
+        qDebug() << "Fire alarm chain: " << (chain)<< "\n\r";
 
         QDateTime now =  QDateTime::currentDateTime();
 
