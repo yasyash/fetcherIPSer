@@ -466,7 +466,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     //end of equipments init.
 
     //timer initialization
-    m_renovateTimer->start(420000); // every 7 minutes we set all slave ID to active mode for polling despite of really state
+    m_renovateTimer->start(300000); // every 5 minutes we set all slave ID to active mode for polling despite of really state
 
     QString polltime = cmdline_args.value(cmdline_args.indexOf("-polltime") +1);
     if (polltime == "")

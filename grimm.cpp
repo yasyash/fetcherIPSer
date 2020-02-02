@@ -144,6 +144,9 @@ void Grimm::reOpen(QString *ip, quint16 *port)
        // sendData( &_byte);
 
         qtelnet::telnet_disconnect(*tracker);
+        delete tracker;
+        tracker = nullptr;
+
 
   //  }
 
@@ -162,6 +165,11 @@ void Grimm::reOpen(QString *ip, quint16 *port)
     is_read = false;
 
     QString _port = QString::number(ushort(*port));
+
+    tracker = new qtelnet;
+    // Add (optional) callback for receiving data from server
+    tracker->set_data_recv_callback(&(Grimm::onDataRecv));
+    tracker->set_data_recv_bundle((void*) this);
 
     int r = qtelnet::telnet_connect(*tracker,
                                     ip->toStdString().c_str(),
