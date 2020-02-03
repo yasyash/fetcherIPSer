@@ -90,9 +90,9 @@ private slots:
 
 private:
 
-    modbus_t * m_serialModbus;
+    modbus_t * m_serialModbus  = nullptr;
 
-    modbus_t * m_modbus;
+    modbus_t * m_modbus = NULL;
     QTimer * m_pollTimer;
     QTimer * m_statusTimer;
     QTimer * m_renovateTimer; //timer for  renovate of all modbus slave id polling
@@ -119,32 +119,32 @@ private:
 
     bool verbose; //verbose mode flag
 
-    ups_status *m_ups;   //member for UPS status
+    ups_status *m_ups = nullptr;   //member for UPS status
     QString m_ups_ip;
     quint16 m_ups_port;
     QString m_ups_username;
 
-    TcpSock    *m_fire; //member for Fire alarm status
+    TcpSock    *m_fire = nullptr; //member for Fire alarm status
     QString m_alarmip;
     quint16 m_alarmport;
 
-    DustTcpSock    *m_dust; //member for Dust Measure
+    DustTcpSock    *m_dust = nullptr; //member for Dust Measure
     QString m_dust_ip;
     quint16 m_dust_port;
 
-    MeteoTcpSock *m_meteo; //member for Meteostation
+    MeteoTcpSock *m_meteo = nullptr; //member for Meteostation
     QString m_meteo_ip;
     quint16 m_meteo_port;
 
-    Serinus *m_serinus; //member for Serinus
+    Serinus *m_serinus = nullptr; //member for Serinus
     QString m_serinus_ip;
     quint16 m_serinus_port;
 
-    Grimm *m_grimm; //member for Grimm
+    Grimm *m_grimm = nullptr; //member for Grimm
     QString m_grimm_ip;
     quint16 m_grimmport;
 
-    Liga     *m_liga; //member for ACA-Liga
+    Liga     *m_liga = nullptr; //member for ACA-Liga
     QString m_liga_ip;
     quint16 m_liga_port;
 

@@ -519,11 +519,13 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
 
 
     //UPS data init
-    m_ups->read_voltage();
-    m_data->insert("Напряжение мин.", m_ups->voltage);
-    //m_measure->insert("Напряжение мин.", 1);
-    m_data->insert("Напряжение макс.", m_ups->voltage);
-    //m_measure->insert("Напряжение макс.", 1);
+    if (m_ups){
+        m_ups->read_voltage();
+        m_data->insert("Напряжение мин.", m_ups->voltage);
+        //m_measure->insert("Напряжение мин.", 1);
+        m_data->insert("Напряжение макс.", m_ups->voltage);
+        //m_measure->insert("Напряжение макс.", 1);
+    }
 
     ms_range->insert("PM", 1000000);
     ms_range->insert("PM1", 1000000);
@@ -532,12 +534,13 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     ms_range->insert("PM10", 1000000);
 
     //Grimm listening confiramtion
-    m_grimm->send_go();
+    if (m_grimm)
+        m_grimm->send_go();
 }
 
 
 processor::~processor()
-{
+{ if (m_dust)
     m_dust->sendData( "MSTOP");
 
     modbus_close( m_serialModbus );
@@ -1161,6 +1164,7 @@ void processor::renovateSlaveID( void )
         }
     }
 
+if (m_dust) {
     if (!m_dust->connected){
         if ( (m_dust_ip != "") && (m_dust_port >0)){
             m_dust->~DustTcpSock();
@@ -1168,6 +1172,8 @@ void processor::renovateSlaveID( void )
             m_dust->sendData( "MSTART"); //restart Dust measure equipment
         }
     }
+}
+if (m_meteo) {
 
     if (!m_meteo->connected){
         if ( (m_meteo_ip != "") && (m_meteo_port >0)){
@@ -1176,12 +1182,16 @@ void processor::renovateSlaveID( void )
             m_meteo = new MeteoTcpSock(this, &m_meteo_ip, &m_meteo_port);
         }
     }
+}
 
+if (m_ups){
     if ( (m_ups_ip != "") && (m_ups_port >0)){
 
         m_ups->err_count = 0;
     }
+}
 
+if (m_serinus){
     if (!m_serinus->connected)
     {
         if ( (m_serinus_ip != "") && (m_serinus_port >0)){
@@ -1192,10 +1202,11 @@ void processor::renovateSlaveID( void )
 
         }
     }
-
-   // if (!m_grimm->connected)
-   // {
-        m_grimm->reOpen(&m_grimm_ip, &m_grimmport);
+}
+    // if (!m_grimm->connected)
+    // {
+if (m_grimm)
+    m_grimm->reOpen(&m_grimm_ip, &m_grimmport);
     //- if ( (m_grimmport > 0) ){
 
     //  -   m_grimm->reOpen();
@@ -1212,7 +1223,7 @@ void processor::squeezeAlarmMsg()
 {
     QMap<QDateTime, QString>::iterator event_iterator;
     QMap<QDateTime, QString>::iterator event_code_iterator;
-
+if (m_fire){
     if( (m_fire->surgardI->m_event->count() < 10))
     {
         if (m_fire->surgardI->m_event->count() > 1)
@@ -1279,6 +1290,7 @@ void processor::squeezeAlarmMsg()
         m_fire->surgardI->m_event_code->clear();
     }
 }
+}
 void processor::transactionDB(void)
 {
 
@@ -1301,138 +1313,142 @@ void processor::transactionDB(void)
                       "VALUES ( :date_time, :type, :descr)");
 
     //Alarm data reading and filtering
+    if (m_fire){
+        squeezeAlarmMsg();
 
-    squeezeAlarmMsg();
-
-    for (event_iterator = m_fire->surgardI->m_event->begin(); event_iterator != m_fire->surgardI->m_event->end(); ++event_iterator)
-    {
-        query.prepare("INSERT INTO fire (idd, typemeasure, surgard, date_time_in) "
-                      "VALUES (:idd, :typemeasure, :surgard, :date_time_in)");
-
-        query.bindValue(":idd", QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")));
-        query.bindValue(":date_time_in", event_iterator.key().toString( "yyyy-MM-dd hh:mm:ss"));
-        query.bindValue(":typemeasure", event_iterator.value());
-        query.bindValue(":surgard", m_fire->surgardI->m_event_code->value( event_iterator.key()) );
-
-        if (!m_conn->isOpen())
-            m_conn->open();
-
-        if(!m_conn->isOpen())
+        for (event_iterator = m_fire->surgardI->m_event->begin(); event_iterator != m_fire->surgardI->m_event->end(); ++event_iterator)
         {
-            qDebug() << "Unable to reopen database connection!\n\r";
-        }
-        else
-        {
-            if (verbose)
+            query.prepare("INSERT INTO fire (idd, typemeasure, surgard, date_time_in) "
+                          "VALUES (:idd, :typemeasure, :surgard, :date_time_in)");
+
+            query.bindValue(":idd", QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")));
+            query.bindValue(":date_time_in", event_iterator.key().toString( "yyyy-MM-dd hh:mm:ss"));
+            query.bindValue(":typemeasure", event_iterator.value());
+            query.bindValue(":surgard", m_fire->surgardI->m_event_code->value( event_iterator.key()) );
+
+            if (!m_conn->isOpen())
+                m_conn->open();
+
+            if(!m_conn->isOpen())
             {
-                qDebug() << "Transaction status to the Fire Alarm table is " << ((query.exec() == true) ? "successful!" :  "not complete!\n\r");
-                qDebug() << "The last error is " << (( query.lastError().text().trimmed() == "") ? "absent" : query.lastError().text())<<"\n\r";
+                qDebug() << "Unable to reopen database connection!\n\r";
             }
             else
             {
-                if (query.exec())
+                if (verbose)
                 {
-                    qDebug() << "Insertion to the Fire Alarm table is successful!\n\r";
+                    qDebug() << "Transaction status to the Fire Alarm table is " << ((query.exec() == true) ? "successful!" :  "not complete!\n\r");
+                    qDebug() << "The last error is " << (( query.lastError().text().trimmed() == "") ? "absent" : query.lastError().text())<<"\n\r";
                 }
                 else
                 {
-                    qDebug() << "Insertion to the Fire Alarm table is not successful!\n\r";
+                    if (query.exec())
+                    {
+                        qDebug() << "Insertion to the Fire Alarm table is successful!\n\r";
+                    }
+                    else
+                    {
+                        qDebug() << "Insertion to the Fire Alarm table is not successful!\n\r";
 
+                    }
                 }
+
             }
-
         }
+        query.finish();
+if (m_fire){
+        m_fire->surgardI->m_event->clear();
+        m_fire->surgardI->m_event_code->clear();
+}
     }
-    query.finish();
-
-    m_fire->surgardI->m_event->clear();
-    m_fire->surgardI->m_event_code->clear();
 
     //Meteo data processing
-    if (m_meteo->sample_t >0){
-        query.prepare("INSERT INTO meteo (station, date_time, bar, temp_in, hum_in, temp_out, hum_out, speed_wind, dir_wind, dew_pt, heat_indx, chill_wind, thsw_indx, rain, rain_rate, uv_indx, rad_solar, et) "
-                      "VALUES (:station, :date_time, :bar, :temp_in, :hum_in, :temp_out, :hum_out, :speed_wind, :dir_wind, :dew_pt, :heat_indx, :chill_wind, :thsw_indx, :rain, :rain_rate, :uv_indx, :rad_solar, :et)");
+    if (m_meteo) {
+        if (m_meteo->sample_t >0){
+            query.prepare("INSERT INTO meteo (station, date_time, bar, temp_in, hum_in, temp_out, hum_out, speed_wind, dir_wind, dew_pt, heat_indx, chill_wind, thsw_indx, rain, rain_rate, uv_indx, rad_solar, et) "
+                          "VALUES (:station, :date_time, :bar, :temp_in, :hum_in, :temp_out, :hum_out, :speed_wind, :dir_wind, :dew_pt, :heat_indx, :chill_wind, :thsw_indx, :rain, :rain_rate, :uv_indx, :rad_solar, :et)");
 
-        query.bindValue(":station", QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")));
-        query.bindValue(":date_time", tmp_time);
+            query.bindValue(":station", QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")));
+            query.bindValue(":date_time", tmp_time);
 
-        for (meteo_iterator = m_meteo->measure->begin(); meteo_iterator != m_meteo->measure->end(); ++meteo_iterator)
-        {
-            if ((meteo_iterator.key() == "dir_wind")||(meteo_iterator.key() == "dir_wind_hi"))
+            for (meteo_iterator = m_meteo->measure->begin(); meteo_iterator != m_meteo->measure->end(); ++meteo_iterator)
             {
-                query.bindValue(QString(":").append(meteo_iterator.key()), QString::number(double(meteo_iterator.value()/m_meteo->sample_t), 'f', 1));
-            }
-            else
-            {
-                query.bindValue(QString(":").append(meteo_iterator.key()), meteo_iterator.value()/m_meteo->sample_t);
-            }
-
-        }
-        if (!m_conn->isOpen())
-            m_conn->open();
-
-        if(!m_conn->isOpen())
-        {
-            qDebug() << "Unable to reopen database connection!";
-        }
-        else
-        {
-            if (verbose)
-            {
-                qDebug() << "Transaction status to the meteostation's table is " << ((query.exec() == true) ? "successful!" :  "not complete!\n\r");
-                qDebug() << "The last error is " << (( query.lastError().text().trimmed() == "") ? "absent" : query.lastError().text()) << "\n\r";
-            }
-            else
-            {
-                if (query.exec())
+                if ((meteo_iterator.key() == "dir_wind")||(meteo_iterator.key() == "dir_wind_hi"))
                 {
-                    qDebug() << "Insertion to the meteostation's table is successful!\n\r";
+                    query.bindValue(QString(":").append(meteo_iterator.key()), QString::number(double(meteo_iterator.value()/m_meteo->sample_t), 'f', 0));
                 }
                 else
                 {
-                    qDebug() << "Insertion to the meteostation's table is not successful!\n\r";
-
+                    query.bindValue(QString(":").append(meteo_iterator.key()), meteo_iterator.value()/m_meteo->sample_t);
                 }
+
+            }
+            if (!m_conn->isOpen())
+                m_conn->open();
+
+            if(!m_conn->isOpen())
+            {
+                qDebug() << "Unable to reopen database connection!";
+            }
+            else
+            {
+                if (verbose)
+                {
+                    qDebug() << "Transaction status to the meteostation's table is " << ((query.exec() == true) ? "successful!" :  "not complete!\n\r");
+                    qDebug() << "The last error is " << (( query.lastError().text().trimmed() == "") ? "absent" : query.lastError().text()) << "\n\r";
+                }
+                else
+                {
+                    if (query.exec())
+                    {
+                        qDebug() << "Insertion to the meteostation's table is successful!\n\r";
+                    }
+                    else
+                    {
+                        qDebug() << "Insertion to the meteostation's table is not successful!\n\r";
+
+                    }
+                }
+
             }
 
+            query.finish();
+if (m_meteo){
+            m_meteo->measure->clear();
+            m_meteo->sample_t = 0;
+}
+        } else {
+            query_log.bindValue(":date_time", tmp_time );
+            query_log.bindValue( ":type", 404 );
+            query_log.bindValue(":descr", "Метеокомплекс на посту  " + QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")) + "  не отвечает..."  );
+
+            query_log.exec();
+            // qDebug() << "Transaction status to the meteostation's table is " << ((query_log.exec() == true) ? "successful!" :  "not complete!");
+            // qDebug() << "The last error is " << (( query_log.lastError().text().trimmed() == "") ? "absent" : query_log.lastError().text());
         }
-
-        query.finish();
-
-        m_meteo->measure->clear();
-        m_meteo->sample_t = 0;
-    } else {
-        query_log.bindValue(":date_time", tmp_time );
-        query_log.bindValue( ":type", 404 );
-        query_log.bindValue(":descr", "Метеокомплекс на посту  " + QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")) + "  не отвечает..."  );
-
-        query_log.exec();
-        // qDebug() << "Transaction status to the meteostation's table is " << ((query_log.exec() == true) ? "successful!" :  "not complete!");
-        // qDebug() << "The last error is " << (( query_log.lastError().text().trimmed() == "") ? "absent" : query_log.lastError().text());
     }
-
 
 
     //ACA-Liga slow fetch data but too fast comparing with the chromatography processing
-
-    m_liga->getLastResult();
-    if (!m_liga->is_read)
-    {
-        fillSensorData(&m_liga->is_read, m_liga->measure);//copy data from object
-
-    } else { if (m_liga->error)
+    if (m_liga){
+        m_liga->getLastResult();
+        if (!m_liga->is_read)
         {
-            query_log.bindValue(":date_time", tmp_time );
-            query_log.bindValue( ":type", 404 );
-            query_log.bindValue(":descr", "Хроматограф на посту  " + QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")) + " работает с ошибкой." + m_liga->status  );
+            fillSensorData(&m_liga->is_read, m_liga->measure);//copy data from object
 
-            query_log.exec();
+        } else { if (m_liga->error)
+            {
+                query_log.bindValue(":date_time", tmp_time );
+                query_log.bindValue( ":type", 404 );
+                query_log.bindValue(":descr", "Хроматограф на посту  " + QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")) + " работает с ошибкой." + m_liga->status  );
+
+                query_log.exec();
+
+            }
 
         }
 
     }
-
-
 
     //Sensor data processing
     bool is_static = false; // for PM static array indication
@@ -1606,90 +1622,91 @@ void processor::readSocketStatus()
     //if (m_dust->status == "Running"){
 
     //Dust data reading
-    if (m_dust->connected){
-        m_dust->sendData( "@");
-        //while (!m_dust->is_read);
-        m_dust->is_read = false;
-        qDebug() << "count " << dust.length() <<"\n\r";
+    if (m_dust){
+        if (m_dust->connected){
+            m_dust->sendData( "@");
+            //while (!m_dust->is_read);
+            m_dust->is_read = false;
+            qDebug() << "count " << dust.length() <<"\n\r";
 
-        for (int i = 0; i < dust.length(); i++)
-        {
-            tmp_type_measure = dust[i];
-            tmp = m_data->value(tmp_type_measure, -1); //detect first measure
-
-            if ( tmp == -1)
+            for (int i = 0; i < dust.length(); i++)
             {
-                if (m_dust->measure->value(tmp_type_measure) >0)
+                tmp_type_measure = dust[i];
+                tmp = m_data->value(tmp_type_measure, -1); //detect first measure
+
+                if ( tmp == -1)
                 {
-                    m_data->insert(tmp_type_measure, m_dust->measure->value(tmp_type_measure)); // insert into QMap ordering pair of measure first time
-                    m_measure->insert(tmp_type_measure, 1);
-                    qDebug() << "measure... " << tmp_type_measure << " value = " << (float)m_dust->measure->value(tmp_type_measure)/m_range->value(tmp_type_measure) <<"\n\r";
-                }
-            } else {
-                if (m_dust->measure->value(tmp_type_measure) >0)
-                {
-                    m_data->insert(tmp_type_measure, tmp + m_dust->measure->value(tmp_type_measure));
-                    m_measure->insert(tmp_type_measure, m_measure->value(tmp_type_measure, 0) +1); //increment counter
-                    qDebug() << "measure... " << tmp_type_measure << " value = " << (float)m_dust->measure->value(tmp_type_measure)/m_range->value(tmp_type_measure) <<"\n\r";
+                    if (m_dust->measure->value(tmp_type_measure) >0)
+                    {
+                        m_data->insert(tmp_type_measure, m_dust->measure->value(tmp_type_measure)); // insert into QMap ordering pair of measure first time
+                        m_measure->insert(tmp_type_measure, 1);
+                        qDebug() << "measure... " << tmp_type_measure << " value = " << (float)m_dust->measure->value(tmp_type_measure)/m_range->value(tmp_type_measure) <<"\n\r";
+                    }
+                } else {
+                    if (m_dust->measure->value(tmp_type_measure) >0)
+                    {
+                        m_data->insert(tmp_type_measure, tmp + m_dust->measure->value(tmp_type_measure));
+                        m_measure->insert(tmp_type_measure, m_measure->value(tmp_type_measure, 0) +1); //increment counter
+                        qDebug() << "measure... " << tmp_type_measure << " value = " << (float)m_dust->measure->value(tmp_type_measure)/m_range->value(tmp_type_measure) <<"\n\r";
+                    }
                 }
             }
-        }
-        // }
 
-        m_dust->measure->clear();
+            // }
+
+            m_dust->measure->clear();
+        }
     }
     //Meteostation data reading
-    if (m_meteo->connected)
-        m_meteo->sendData("LPS 2 1");//sendData("LOOP 1");
-
+    if (m_meteo) {
+        if (m_meteo->connected)
+            m_meteo->sendData("LPS 2 1");//sendData("LOOP 1");
+    }
     //m_liga->getLastResult();
 
     //UPS acqusition data reading
-    if (m_ups->err_count <10){ //minimum error threshold
-        m_ups->read_voltage();
-        if (!m_measure->value("Напряжение мин."))
-        {   m_data->insert("Напряжение мин.", m_ups->voltage);
-            m_measure->insert("Напряжение мин.", 1); //we don't interested in average voltage - we need lowest or highest values
+    if (m_ups){
+        if (m_ups->err_count <10){ //minimum error threshold
+            m_ups->read_voltage();
+            if (!m_measure->value("Напряжение мин."))
+            {   m_data->insert("Напряжение мин.", m_ups->voltage);
+                m_measure->insert("Напряжение мин.", 1); //we don't interested in average voltage - we need lowest or highest values
 
-        }
+            }
 
-        if (!m_measure->value("Напряжение макс."))
-        {   m_data->insert("Напряжение макс.", m_ups->voltage);
-            m_measure->insert("Напряжение макс.", 1); //we don't interested in average voltage - we need lowest or highest values
+            if (!m_measure->value("Напряжение макс."))
+            {   m_data->insert("Напряжение макс.", m_ups->voltage);
+                m_measure->insert("Напряжение макс.", 1); //we don't interested in average voltage - we need lowest or highest values
 
-        }
+            }
+if (m_ups) {
+            if (m_ups->voltage < m_data->value("Напряжение мин.")){
+                m_data->insert("Напряжение мин.", m_ups->voltage);
+            }
 
-        if (m_ups->voltage < m_data->value("Напряжение мин.")){
-            m_data->insert("Напряжение мин.", m_ups->voltage);
-        }
-
-        if (m_ups->voltage > m_data->value("Напряжение макс.")){
-            m_data->insert("Напряжение макс.", m_ups->voltage);
+            if (m_ups->voltage > m_data->value("Напряжение макс.")){
+                m_data->insert("Напряжение макс.", m_ups->voltage);
+            }
+}
         }
     }
-
     //Alarm data reading
+    if (m_fire) {
 
-    qDebug() << "Alarm messages is  "<< m_fire->surgardI->m_event->count() <<"\n\r";
-
-    // Read Serinus status
-    if (m_serinus->connected)
-    {   QByteArray ba;
-        ba.resize(2);
-        ba[0] = 50; //primary gas response
-        ba[1] = 51; //secondary gas response
-        m_serinus->sendData(1, &ba);
-
+        qDebug() << "Alarm messages is  "<< m_fire->surgardI->m_event->count() <<"\n\r";
     }
-    // Grimm data sending
-    /* if (m_grimm->connected)
-    {   QByteArray ba;
-        ba.resize(1);
-        ba[0] = 50;
-        ba[1] = 51;
-        m_serinus->sendData(1, &ba);
+    // Read Serinus status
+    if (m_serinus) {
+        if (m_serinus->connected)
+        {   QByteArray ba;
+            ba.resize(2);
+            ba[0] = 50; //primary gas response
+            ba[1] = 51; //secondary gas response
+            m_serinus->sendData(1, &ba);
 
-    }*/
+        }
+    }
+
 
 }
 

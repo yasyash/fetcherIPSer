@@ -31,6 +31,7 @@ class MeteoTcpSock : public QObject
 public:
     MeteoTcpSock(QObject *parent, QString *ip, quint16 *port);
     virtual ~MeteoTcpSock();
+    float compare(float _in, float _prev);
 
     void sendData(char *data);
 
@@ -55,6 +56,7 @@ private:
     quint32 blockSize;
     QString *m_ip;
     int     *m_port;
+    bool first_run = true;
 
 public:
     //enum _status {Idle, Waiting, Running};
@@ -64,6 +66,8 @@ public:
     bool is_read;
     uint sample_t;
     QMap<QString, float> *measure;
+    QMap<QString, float> *measure_prev; // previous sample
+
     enum _command last_command;
     QAbstractSocket::SocketState connected = QAbstractSocket::UnconnectedState;
 
