@@ -1,7 +1,7 @@
-ASCII Modbus Data Fetcher console verison
+ASCII Modbus Data Fetcher console verison ip modification
 ==========
-Copyright (c) 2019 Yaroslav Shkliar
-Copyright (c) 2019 ILIT.RU, Research IT Laboratory 
+Copyright (c) 2020 Yaroslav Shkliar
+Copyright (c) 2020 ILIT.RU, Research IT Laboratory 
 
 http://www.ilit.ru
 
@@ -31,6 +31,8 @@ Requirements
 * Qt5.12
 * GCC
 * libsnmp-dev 5.7.3
+* gSoap 2.8
+* libtelnet-dev
 
 Building
 --------

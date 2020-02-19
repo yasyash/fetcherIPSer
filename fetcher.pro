@@ -35,7 +35,8 @@ SOURCES += \
         soapC.cpp\
         soapWSHttpBinding_USCOREIAutoChromWCFHostProxy.cpp\
         stdsoap2.cpp\
-        qtelnet.cpp
+        qtelnet.cpp \
+        modbusip.cpp
 
 
 
@@ -59,7 +60,8 @@ HEADERS +=\
     soapStub.h \
     WSHttpBinding_USCOREIAutoChromWCFHost.nsmap \
     wsa5.h\
-    qtelnet.h
+    qtelnet.h \
+    modbusip.h
 
 
 

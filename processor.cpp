@@ -85,124 +85,35 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
         }
     }
 
-    QString port = cmdline_args.value(cmdline_args.indexOf("-port") +1);
-    if (port == "")
+
+    // modbusip init
+    m_modbus_ip = cmdline_args.value(cmdline_args.indexOf("-moxaip") +1);
+    if (m_modbus_ip == "")
     {
-        qDebug ("Fatal error:  wrong data of the port parameter\n\r");
-        exit(-1);
+        qDebug ( "IP address of modbus is not set.\n\r");
     }
-
-    QString baud = cmdline_args.value(cmdline_args.indexOf("-baud") +1);
-    if (baud == "")
-    {         qDebug ( "Fatal error:  wrong data of the baud parameter\n\r");
-
-        exit(-1);
-
-    }
-
-    QString parity = cmdline_args.value(cmdline_args.indexOf("-parity") +1).toUpper();
-    if (parity == "" || parity == 'N' || parity == 'E' || parity == 'O' || parity == 'n' || parity == 'e' || parity == 'o')
-    {  qDebug ( "Fatal error:  wrong data of theparity parameter - note empty and N [n] or E [e] or O [0] - non case sensitive value\n\r");
-        exit(-1);
-
-    }
-
-    QString dataBits = cmdline_args.value(cmdline_args.indexOf("-data") +1);
-    if (dataBits == "")
+    else
     {
-        qDebug ( "Fatal error:  wrong data of the data bits parameter\n\r");
-        exit(-1);
 
-    }
-
-    QString stopBits = cmdline_args.value(cmdline_args.indexOf("-stop") +1);
-    if (stopBits == "")
-    {
-        qDebug ("Fatal error: wrong data of the stop bits parameter\n\r");
-        exit(-1);
-
-    }
-
-
-    /* connect( ui->rtuSettingsWidget,   SIGNAL(serialPortActive(bool)), this, SLOT(onRtuPortActive(bool)));*/
-    m_serialModbus = modbus_new_ascii
-            ( port.toLatin1().constData(),
-              baud.toInt(),
-              *parity.toLatin1().constData(),
-              dataBits.toInt(),
-              stopBits.toInt());
-
-    if( modbus_connect( m_serialModbus ) == -1 )
-    {
-        releaseModbus();
-
-        qDebug ( "Fatal error: could not connect serial port");
-        m_conn = new QSqlDatabase();
-        *m_conn = QSqlDatabase::addDatabase("QPSQL");
-        m_conn->setHostName("localhost");
-
-        QString db = cmdline_args.value(cmdline_args.indexOf("-db") +1);
-        if (db == "")
+        m_modbus_port = cmdline_args.value(cmdline_args.indexOf("-moxaport") +1).toUShort();
+        if (m_modbus_port <= 0)
         {
+            qDebug ("modbus port error:  expected parameter\n\r");
+        }
+        else
+        {
+            m_modbusip = new ModbusIP(this, &m_modbus_ip, &m_modbus_port);
 
-            qDebug ( "Fatal error: wrong data of the database parameter\n\r");
+            connect(m_modbusip, SIGNAL(dataIsReady(bool*, QMap<QString, int>*, QMap<QString, int>*)), this, SLOT(fillSensorDataModbus(bool*, QMap<QString, int>*, QMap<QString, int>*))); //fill several data to one sensor's base
 
         }
-
-        QString user = cmdline_args.value(cmdline_args.indexOf("-user") +1);
-        if (user == "")
-        {
-
-            qDebug ( "Fatal error: wrong data of the user parameter\n\r");
-
-        }
-
-        QString pw = cmdline_args.value(cmdline_args.indexOf("-pwd") +1);
-        if (pw == "")
-        {
-
-            qDebug ( "Fatal error: wrong data of the password parameter\n\r");
-
-        }
-
-        m_conn->setDatabaseName(db);
-        m_conn->setUserName(user);
-        m_conn->setPassword(pw);
-
-
-        bool status = m_conn->open();
-        if (status)
-        {
-            QSqlQuery query_log = QSqlQuery(*m_conn);
-            query_log.prepare("INSERT INTO logs (date_time, type, descr ) "
-                              "VALUES ( :date_time, :type, :descr)");
-            query_log.bindValue(":date_time", QDateTime::currentDateTime().toString( "yyyy-MM-dd hh:mm:ss") );
-            query_log.bindValue( ":type", 500 );
-
-            QSqlQuery *query= new QSqlQuery ("select * from stations where is_present = 'true'", *m_conn);
-            query->first();
-            QSqlRecord rec = query->record();
-
-            m_uuidStation  = new QUuid(rec.field("idd").value().toUuid());
-            QString _str = QString("Фатальная ошибка на посту наблюдения ") + rec.field("namestation").value().toString()+QString("   ") + QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")) + QString("      Интерфейс RS-485 (Moxa) не отвечает - сервис сбора остановлен!!!");
-            query_log.bindValue(":descr", _str  );
-            query_log.exec();
-
-            query_log.finish();
-            m_conn->close();
-        }
-
-
-
-        exit(-1);
-
-
     }
+
 
     QString db = cmdline_args.value(cmdline_args.indexOf("-db") +1);
     if (db == "")
     {
-        releaseModbus();
+       // releaseModbus();
 
         qDebug ( "Fatal error: wrong data of the database parameter\n\r");
         exit(-1);
@@ -212,7 +123,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     QString user = cmdline_args.value(cmdline_args.indexOf("-user") +1);
     if (user == "")
     {
-        releaseModbus();
+       // releaseModbus();
 
         qDebug ( "Fatal error: wrong data of the user parameter\n\r");
         exit(-1);
@@ -222,7 +133,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     QString pw = cmdline_args.value(cmdline_args.indexOf("-pwd") +1);
     if (pw == "")
     {
-        releaseModbus();
+       // releaseModbus();
 
         qDebug ( "Fatal error: wrong data of the password parameter\n\r");
         exit(-1);
@@ -240,7 +151,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     bool status = m_conn->open();
     if (!status)
     {
-        releaseModbus();
+        //releaseModbus();
 
         qDebug() << ( QString("Connection error: " + m_conn->lastError().text()).toLatin1().constData()) <<   " \n\r";
         exit(-1);
@@ -256,7 +167,7 @@ processor::processor(QObject *_parent,    QStringList *cmdline) : QObject (_pare
     t->start( 500 );
 
     m_pollTimer = new QTimer( this );
-    connect( m_pollTimer, SIGNAL(timeout()), this, SLOT(sendModbusRequest()));
+   // connect( m_pollTimer, SIGNAL(timeout()), this, SLOT(sendModbusRequest()));
     connect( m_pollTimer, SIGNAL(timeout()), this, SLOT(readSocketStatus()));
 
     //  m_statusTimer = new QTimer( this );
@@ -1164,6 +1075,17 @@ void processor::renovateSlaveID( void )
         }
     }
 
+    if (m_modbusip)
+    {
+        if (!m_modbusip->connected){
+
+            m_modbusip->~ModbusIP();
+            m_modbusip = new ModbusIP(this, &m_modbus_ip, &m_modbus_port);
+            connect(m_modbusip, SIGNAL(dataIsReady(bool*, QMap<QString, int>*, QMap<QString, int>*)), this, SLOT(fillSensorDataModbus(bool*, QMap<QString, int>*, QMap<QString, int>*))); //fill several data to one sensor's base
+
+        }
+    }
+
 if (m_dust) {
     if (!m_dust->connected){
         if ( (m_dust_ip != "") && (m_dust_port >0)){
@@ -1365,7 +1287,7 @@ if (m_fire){
     //Meteo data processing
     if (m_meteo) {
         if (m_meteo->sample_t >0){
-            query.prepare("INSERT INTO meteo (station, date_time, bar, temp_in, hum_in, temp_out, hum_out, speed_wind, dir_wind, dew_pt, heat_indx, chill_wind, thsw_indx, rain, rain_rate, uv_indx, rad_solar, et) "
+             query.prepare("INSERT INTO meteo (station, date_time, bar, temp_in, hum_in, temp_out, hum_out, speed_wind, dir_wind, dew_pt, heat_indx, chill_wind, thsw_indx, rain, rain_rate, uv_indx, rad_solar, et) "
                           "VALUES (:station, :date_time, :bar, :temp_in, :hum_in, :temp_out, :hum_out, :speed_wind, :dir_wind, :dew_pt, :heat_indx, :chill_wind, :thsw_indx, :rain, :rain_rate, :uv_indx, :rad_solar, :et)");
 
             query.bindValue(":station", QString(m_uuidStation->toString()).remove(QRegExp("[\\{\\}]")));
@@ -1376,9 +1298,12 @@ if (m_fire){
                 if ((meteo_iterator.key() == "dir_wind")||(meteo_iterator.key() == "dir_wind_hi"))
                 {
                     query.bindValue(QString(":").append(meteo_iterator.key()), QString::number(double(meteo_iterator.value()/m_meteo->sample_t), 'f', 0));
+                    qDebug() << "Мeteo - "<< meteo_iterator.key() << " samles = " << m_meteo->sample_t<< " and value = "<< meteo_iterator.value()/m_meteo->sample_t;
+
                 }
                 else
                 {
+                    qDebug() << "Мeteo - "<< meteo_iterator.key() << " samles = " << m_meteo->sample_t<< " and value = "<< meteo_iterator.value()/m_meteo->sample_t;
                     query.bindValue(QString(":").append(meteo_iterator.key()), meteo_iterator.value()/m_meteo->sample_t);
                 }
 
@@ -1613,13 +1538,23 @@ void processor::readSocketStatus()
     QString tmp_type_measure;
     QStringList dust = {"PM1", "PM2.5", "PM4", "PM10", "PM"  };
     int tmp;
-    //m_dust->sendData( "MSTOP\r", 6);
 
-    //m_dust->sendData( "MSTATUS");
-    //while (!m_dust->is_read);
-    //m_dust->is_read = false;
 
-    //if (m_dust->status == "Running"){
+    int j = 0;
+    QMap<int, int>::iterator slave;
+    //if( m_tcpActive )
+    //  ui->tcpSettingsWidget->tcpConnect();
+
+
+// MODBUS ip
+    for (slave = m_pool->begin(); slave != m_pool->end(); ++slave)
+    {
+        tmp_type_measure.clear();
+m_modbusip->sendData(slave.key(), slave.value());
+
+       }
+
+
 
     //Dust data reading
     if (m_dust){
@@ -1760,6 +1695,28 @@ void processor::static_fillSensorData(bool *_is_read, QMap<QString, float> *_mea
         ms_measure->insert(sensor.key(), ms_measure->value(sensor.key()) + 1);
         _measure->insert(sensor.key(), 0 );
         _measure->insert(sensor.key(), 0);
+    }
+    *_is_read = true;
+
+}
+
+void processor::fillSensorDataModbus( bool *_is_read, QMap<QString, int> *_measure, QMap<QString, int> *_sample)
+{
+    QMap<QString, int>::iterator sensor;
+
+
+
+    for (sensor = _measure->begin(); sensor != _measure->end(); ++sensor)
+    {
+        if (_sample->value(sensor.key())>0)
+        {
+            m_data->insert(sensor.key(), _measure->value(sensor.key())  + m_data->value(sensor.key()) );
+            m_measure->insert(sensor.key(), m_measure->value(sensor.key()) + _sample->value(sensor.key()));
+            _measure->insert(sensor.key(), 0 );
+            _sample->insert(sensor.key(), 0);
+
+        }
+
     }
     *_is_read = true;
 

@@ -28,6 +28,7 @@
 #include <QVector>
 
 #include "modbus.h"
+#include "modbusip.h"
 #include "modbus-private.h"
 #include "ups_status.h"
 #include "tcpsock.h"
@@ -73,6 +74,7 @@ public slots:
     void fillSensorData( bool *_is_read, QMap<QString, float> *_measure, QMap<QString, int> *_sample); //sensor equipment type or name
     void fillSensorData( bool *_is_read, QMap<QString, float> *_measure); //polymorphic method for slow measuring
     static void static_fillSensorData(  bool *_is_read, QMap<QString, float> *_measure, QMap<QString, int> *_sample);
+    void fillSensorDataModbus( bool *_is_read, QMap<QString, int> *_measure, QMap<QString, int> *_sample);
 
 private slots:
     void sendModbusRequest( void ); //update data view
@@ -91,6 +93,10 @@ private slots:
 private:
 
     modbus_t * m_serialModbus  = nullptr;
+
+    ModbusIP *m_modbusip = nullptr;
+    QString m_modbus_ip;
+    quint16 m_modbus_port;
 
     modbus_t * m_modbus = NULL;
     QTimer * m_pollTimer;
