@@ -17,6 +17,7 @@
  */
 
 #include "serinus.h"
+#include <math.h>
 
 #include <QDebug>
 
@@ -96,9 +97,9 @@ void Serinus::readData()
     int running;
     QRegExp xRegExp("(-?\\d+(?:[\\.,]\\d+(?:e\\d+)?)?)");
 
-    QByteArray data = m_sock->readAll();
+    QByteArray _data = m_sock->readAll();
 
-    qDebug() << "Serinus measure equipment data: " << data << " lenght - " << data.length() << " \n\r";
+    qDebug() << "Serinus buffer --- data: " << _data << " lenght - " << _data.length() << " \n\r";
 
     if (is_read)
     {
@@ -116,46 +117,54 @@ void Serinus::readData()
     int i, j;
     float result;
 
-    if (( int(data[2]) == 1 ) && (int(data[4]) == 10)) //detect right response for pri. and sec. gas request
+    data.append( _data); //copy to main buffer
+
+    if (data.length() > 16)  //data buffer detection on fullness
     {
-        for (j = 0; j < 2; j++) {
+        if (( int(data[2]) == 1 ) && (int(data[4]) == 10)) //detect right response for pri. and sec. gas request
+        {
+            for (j = 0; j < 2; j++) {
 
 
 
-            sign = data [5*j + 6] >> 7;
-            ieee = uint32_t((uchar(data [5*j + 6]) << 24 ) | (uchar(data [5*j + 7]) << 16) | (uchar(data[5*j + 8]) << 8) | uchar(data[5*j + 9]));
-            expo = (ieee & 0x7F800000) >> 23;
-            expo -= 127;
+                sign = data [5*j + 6] >> 7;
+                ieee = uint32_t((uchar(data [5*j + 6]) << 24 ) | (uchar(data [5*j + 7]) << 16) | (uchar(data[5*j + 8]) << 8) | uchar(data[5*j + 9]));
+                expo = (ieee & 0x7F800000) >> 23;
+                expo -= 127;
 
-            mantissa = (ieee & 0x7FFFFF);
-            float dec = 1.0f;
-            for(i=0; i<=22; i++) {
-                if(((mantissa >> (22 - i)) & 1) != 0) {
-                    dec += float(pow(2, -i-1));
+                mantissa = (ieee & 0x7FFFFF);
+                float dec = 1.0f;
+                for(i=0; i<=22; i++) {
+                    if(((mantissa >> (22 - i)) & 1) != 0) {
+                        dec += float(pow(2, -i-1));
+                    }
                 }
-            }
 
-            result = float( pow(2,expo));
-            if(sign)
-                result = -1*result * dec;
-            else
-                result = result * dec;
+                result = float( pow(2,expo));
+                if(sign)
+                    result = -1*result * dec;
+                else
+                    result = result * dec;
 
-            if (int(data[5*j + 5]) == 50){
-                sample_t->insert("SO2", sample_t->value("SO2")+1);
-                measure->insert("SO2",  measure->value("SO2") + result);
-            }
+                if (int(data[5*j + 5]) == 50){
+                    sample_t->insert("SO2", sample_t->value("SO2")+1);
+                    measure->insert("SO2",  measure->value("SO2") + result);
+                }
 
-            if (int(data[5*j + 5]) == 51){
-                sample_t->insert("H2S", sample_t->value("H2S")+1);
-                measure->insert("H2S", measure->value("H2S") + result);
+                if (int(data[5*j + 5]) == 51){
+                    sample_t->insert("H2S", sample_t->value("H2S")+1);
+                    measure->insert("H2S", measure->value("H2S") + result);
+                }
+
             }
+            is_read = false;
+            qDebug() << "Serinus measure equipment data: " << data << " lenght - " << data.length() << " \n\r";
+            data.clear();
+            emit dataIsReady(&is_read, measure, sample_t);
 
         }
-    }
-    is_read = false;
 
-    emit dataIsReady(&is_read, measure, sample_t);
+    }
 
 
     blockSize = 0;

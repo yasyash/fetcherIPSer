@@ -55,6 +55,7 @@ private:
     quint32 blockSize;
     QString *m_ip;
     int *m_port;
+    QByteArray data;
 
 public:
     //enum _status {Idle, Waiting, Running};
