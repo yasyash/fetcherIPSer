@@ -115,6 +115,7 @@ void MeteoTcpSock::readData()
     int running;
     QRegExp xRegExp("(-?\\d+(?:[\\.,]\\d+(?:e\\d+)?)?)");
     float _result;
+    bool _absend = false;
 
     QByteArray data = m_sock->readAll();
 
@@ -148,65 +149,142 @@ void MeteoTcpSock::readData()
         measure->insert("et", 0.0f); //evaporotransportation in mm per day
     }
 
-    _result = ((float)(((uchar(data[9])<<8)+(uchar(data[8]))))/1000)*25.4f;
-    _result = compare (_result, measure_prev->value("bar"));
-    measure_prev->insert("bar",_result);
+    _result = ((float)(((uchar(data[9])<<8)+(uchar(data[8]))))/1000)*25.4f;//inchs Hg TO mm Hg Conversion Formula
+    if ((uchar(data[9])==0) && uchar(data[8]) == 0 && first_run)
+    {
+        measure_prev->insert("bar",760.0f);
 
-    measure->insert("bar",  measure->value("bar") + _result);//inchs Hg TO mm Hg Conversion Formula
+        measure->insert("bar",  measure->value("bar") + 760.0f);//if error detection in first time
+    }
+    else
+    {
+        _result = compare (_result, measure_prev->value("bar"));
 
-    _result =  ((float)((uchar(data[11])<<8) + (uchar(data[10])))/10-32)*5/9;
-    _result = compare (_result, measure_prev->value("temp_in"));
-    measure_prev->insert("temp_in",_result);
+        measure_prev->insert("bar",_result);
 
-    measure->insert("temp_in", measure->value("temp_in") + _result); //Fahrenheit TO Celsius Conversion Formula
+        measure->insert("bar",  measure->value("bar") + _result);
+    }
+
+    _result =  ((float)((uchar(data[11])<<8) + (uchar(data[10])))/10-32)*5/9; //Fahrenheit TO Celsius Conversion Formula
+
+    if (((uchar(data[11])==0) && uchar(data[10]) == 0 && first_run) || ((uchar(data[11])==0x7f) && uchar(data[10]) == 0xff && first_run))
+    {
+        measure_prev->insert("temp_in",23.0f);
+
+        measure->insert("temp_in", measure->value("temp_in") + 23.0f);
+    } else
+    {
+        _result = compare (_result, measure_prev->value("temp_in"));
+
+        measure_prev->insert("temp_in",_result);
+
+        measure->insert("temp_in", measure->value("temp_in") + _result);
+    }
+
 
     _result =  (float)(uchar(data[12]));
-    _result = compare (_result, measure_prev->value("hum_in"));
-    measure_prev->insert("hum_in",_result);
+    if ((uchar(data[12]) == 0 && first_run) || (uchar(data[12]) == 0xff && first_run))
+    {
+        measure_prev->insert("hum_in",30.0f);
 
-    measure->insert("hum_in", measure->value("hum_in") + _result);
+        measure->insert("hum_in", measure->value("hum_in") + 30.0f);
+    } else
+    {
+        _result = compare (_result, measure_prev->value("hum_in"));
+        measure_prev->insert("hum_in",_result);
 
-    _result = ((float)((uchar(data[14])<<8) + (uchar(data[13])))/10-32)*5/9;
-    _result = compare (_result, measure_prev->value("temp_out"));
-    measure_prev->insert("temp_out",_result);
+        measure->insert("hum_in", measure->value("hum_in") + _result);
+    }
 
-    measure->insert("temp_out", measure->value("temp_out") + _result); //Fahrenheit TO Celsius Conversion Formula
 
-    _result = (float)(uchar(data[15]))*1609.344f/3600.0f;
-    _result = compare (_result, measure_prev->value("speed_wind"));
-    measure_prev->insert("speed_wind",_result);
+    _result = ((float)((uchar(data[14])<<8) + (uchar(data[13])))/10-32)*5/9;//Fahrenheit TO Celsius Conversion Formula
 
-    measure->insert("speed_wind", measure->value("speed_wind") + _result);//mile to meter convertion formula
+    if (((uchar(data[14])==0) && uchar(data[13]) == 0 && first_run) || ((uchar(data[14])==0x7f) && uchar(data[13]) == 0xff && first_run))
+    {
+        measure_prev->insert("temp_out",0.0f);
+        measure->insert("temp_out", measure->value("temp_out") + 0.0f);
+        _absend = true;
+
+    } else
+    {
+        _result = compare (_result, measure_prev->value("temp_out"));
+        measure_prev->insert("temp_out",_result);
+        measure->insert("temp_out", measure->value("temp_out") + _result);
+    }
+
+    _result = (float)(uchar(data[15]))*1609.344f/3600.0f;//mile to meter convertion formula
+
+    if ((uchar(data[15]) == 0x7f && first_run) || (uchar(data[15]) == 0xff && first_run))
+    {
+        measure_prev->insert("speed_wind",5.0f);
+
+        measure->insert("speed_wind", measure->value("speed_wind") + 5.0f);
+    } else
+    {
+        _result = compare (_result, measure_prev->value("speed_wind"));
+        measure_prev->insert("speed_wind",_result);
+
+        measure->insert("speed_wind", measure->value("speed_wind") + _result);
+    }
 
     _result = (float)((uchar(data[18])<<8) + uchar(data[17]));
-    _result = compare (_result, measure_prev->value("dir_wind"));
-    measure_prev->insert("dir_wind",_result);
+    if ((_result == 0 ) || (_result >360.0f ))
+    {
+        measure_prev->insert("dir_wind",20.0f);
 
-    measure->insert("dir_wind",  measure->value("dir_wind") + _result);
+        measure->insert("dir_wind",  measure->value("dir_wind") + 20.0f);
+    } else
+    {
 
-    _result = ((float)((uchar(data[32])<<8) + (uchar(data[31])))-32)*5/9;
-    _result = compare (_result, measure_prev->value("dew_pt"));
-    measure_prev->insert("dew_pt",_result);
+        //_result = compare (_result, measure_prev->value("dir_wind"));
+        measure_prev->insert("dir_wind",_result);
 
-    measure->insert("dew_pt",  measure->value("dew_pt") + _result); //Fahrenheit TO Celsius Conversion Formula
+        measure->insert("dir_wind",  measure->value("dir_wind") + _result);
+    }
+
+    _result = ((float)((uchar(data[32])<<8) + (uchar(data[31])))-32)*5/9; //Fahrenheit TO Celsius Conversion Formula
+
+    if (((uchar(data[32])==0) && uchar(data[31]) == 0 && first_run) || ((uchar(data[32])==0x7f) && uchar(data[31]) == 0xff && first_run))
+    {
+        measure_prev->insert("dew_pt",measure->value("temp_out"));
+
+        measure->insert("dew_pt",  measure->value("dew_pt") + measure->value("temp_out"));
+
+    } else
+    {
+        _result = compare (_result, measure_prev->value("dew_pt"));
+        measure_prev->insert("dew_pt",_result);
+
+        measure->insert("dew_pt",  measure->value("dew_pt") + _result);
+    }
 
     _result = (float)(uchar(data[34]));
-    _result = compare (_result, measure_prev->value("hum_out"));
-    measure_prev->insert("hum_out",_result);
+    if ((uchar(data[34]) == 0 && first_run) || (uchar(data[34]) == 0xff && first_run))
+    {
+        measure_prev->insert("hum_out",30.0f);
 
-    measure->insert("hum_out", measure->value("hum_out") + _result);
+        measure->insert("hum_out", measure->value("hum_out") + 30.0f);
+    } else
+    {
+        _result = compare (_result, measure_prev->value("hum_out"));
+        measure_prev->insert("hum_out",_result);
+
+        measure->insert("hum_out", measure->value("hum_out") + _result);
+    }
 
     if ((uchar(data[37])==0) && uchar(data[36]) == 0xff) //if dashed data - not signal
         measure->insert("heat_indx", measure->value("heat_indx") +0.0f);
     else{
         measure->insert("heat_indx", measure->value("heat_indx") + ((float)((uchar(data[37])<<8) + (uchar(data[36])))-32)*5/9); //Fahrenheit TO Celsius Conversion Formula
     }
+
     if ((uchar(data[39])==0) && uchar(data[38]) == 0xff)
         measure->insert("chill_wind", measure->value("chill_wind") +0.0f);
     else {
 
         measure->insert("chill_wind", measure->value("chill_wind") + ((float)((uchar(data[39])<<8) + (uchar(data[38])))-32)*5/9); //Fahrenheit TO Celsius Conversion Formula
     }
+
     if ((uchar(data[41])==0) && uchar(data[40]) == 0xff)
         measure->insert("thsw_indx", measure->value("thsw_indx") +0.0f);
     else {
@@ -214,10 +292,18 @@ void MeteoTcpSock::readData()
     }
 
     _result =  ((float)(uchar(data[43])<<8) + (uchar(data[42])))*0.2f;
-    _result = compare (_result, measure_prev->value("rain_rate"));
-    measure_prev->insert("rain_rate",_result);
+    if ((uchar(data[43])==0x7f) && uchar(data[42]) == 0xff && first_run)
+    {
+        measure_prev->insert("rain_rate",0.0f);
+        measure->insert("rain_rate", measure->value("rain_rate") + 0.0f);//mm per hour
+    }
+    else {
 
-    measure->insert("rain_rate", measure->value("rain_rate") + _result);//mm per hour
+
+        _result = compare (_result, measure_prev->value("rain_rate"));
+        measure_prev->insert("rain_rate",_result);
+        measure->insert("rain_rate", measure->value("rain_rate") + _result);//mm per hour
+    }
 
     if (uchar(data[44]) == 0xff)
         measure->insert("uv_indx", measure->value("uv_indx") +0.0f);
@@ -233,21 +319,42 @@ void MeteoTcpSock::readData()
     //measure->insert("rain_daily",  measure->value("rain_daily") + ((float)(uchar(data[52])<<8) + (uchar(data[51])))*0.2f);//last day quantity
 
     _result = ((float)(uchar(data[56])<<8) + (uchar(data[55])))*0.2f;
-    _result = compare (_result, measure_prev->value("rain"));
-    measure_prev->insert("rain",_result);
 
-    measure->insert("rain", measure->value("rain") + _result); //last hour quantity in mm
+    if ((uchar(data[56])==0x7f) && uchar(data[55]) == 0xff && first_run)
+    {
+        measure_prev->insert("rain",0.0f);
+        measure->insert("rain", measure->value("rain") + 0.0f); //last hour quantity in mm
 
+    }
+    else {
+        _result = compare (_result, measure_prev->value("rain"));
+        measure_prev->insert("rain",_result);
+        measure->insert("rain", measure->value("rain") + _result); //last hour quantity in mm
+    }
     _result =  ((float)(((uchar(data[58])<<8)+(uchar(data[57]))))/1000)*25.4f;
-    _result = compare (_result, measure_prev->value("et"));
-    measure_prev->insert("et",_result);
 
-    measure->insert("et",  measure->value("et") +_result);//inchs  TO mm Conversion Evapotranspiration Formula
+    if ((uchar(data[58])==0x7f) && uchar(data[57]) == 0xff && first_run)
+    {
+        measure_prev->insert("et",0.0f);
+        measure->insert("et", measure->value("et") + 0.0f); //last hour quantity in mm
 
+    }
+    else {
+
+        _result = compare (_result, measure_prev->value("et"));
+        measure_prev->insert("et",_result);
+
+        measure->insert("et",  measure->value("et") +_result);//inchs  TO mm Conversion Evapotranspiration Formula
+    }
     //   measure->insert("batt_remote",  measure->value("batt_remote") + (float)(uchar(data[87])));//%
 
     sample_t++;
-    first_run = false;
+
+    if (_absend) //if temperature outside is absend
+        first_run = true;
+    else {
+        first_run =  false;
+    }
 }
 
 void MeteoTcpSock::displayError(QAbstractSocket::SocketError socketError)
