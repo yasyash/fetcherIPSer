@@ -147,13 +147,18 @@ void Serinus::readData()
                     result = result * dec;
 
                 if (int(data[5*j + 5]) == 50){
-                    sample_t->insert("SO2", sample_t->value("SO2")+1);
-                    measure->insert("SO2",  measure->value("SO2") + result);
+                    if (result >= 0) { //negative value detection
+                        sample_t->insert("SO2", sample_t->value("SO2")+1);
+                        measure->insert("SO2",  measure->value("SO2") + result);
+                    }
                 }
 
                 if (int(data[5*j + 5]) == 51){
-                    sample_t->insert("H2S", sample_t->value("H2S")+1);
-                    measure->insert("H2S", measure->value("H2S") + result);
+                    if (result < 0) result = 0.0f;
+                    if (result >= 0) {//negative value detection
+                        sample_t->insert("H2S", sample_t->value("H2S")+1);
+                        measure->insert("H2S", measure->value("H2S") + result);
+                    }
                 }
 
             }
