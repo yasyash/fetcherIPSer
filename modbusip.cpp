@@ -246,7 +246,17 @@ void ModbusIP::readData()
             measure->insert("NH3", 1);
             sample_t->insert("NH3", 1);
         }
+        if (measure->count("O3") <1 ){
 
+            measure->insert("O3", 1);
+            sample_t->insert("O3", 1);
+        }
+        if (measure->count("CO") <1 ){
+
+            measure->insert("CO", 1);
+            sample_t->insert("CO", 1);
+        }
+        
         emit dataIsReady(&is_read, measure, sample_t);
 
     }
