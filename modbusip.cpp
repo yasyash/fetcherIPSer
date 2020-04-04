@@ -228,8 +228,28 @@ void ModbusIP::readData()
         is_read = false;
 
     }
-    if (!is_read)
+    if (!is_read){
+        if (measure->count("NO") <1 ){
+            measure->insert("NO", 1);
+            sample_t->insert("NO", 1);
+
+        }
+
+        if (measure->count("NO2") <1 ){
+
+            measure->insert("NO2", 1);
+            sample_t->insert("NO2", 1);
+        }
+
+        if (measure->count("NH3") <1 ){
+
+            measure->insert("NH3", 1);
+            sample_t->insert("NH3", 1);
+        }
+
         emit dataIsReady(&is_read, measure, sample_t);
+
+    }
 
 
 
@@ -331,7 +351,7 @@ void ModbusIP::sendData(int address, int registers)
 
         lnt = m_sock->write(ba, lnt);
         lnt = m_sock->flush();
-        QThread::msleep(300);
+        QThread::msleep(500);
         qDebug()<< "\n\ModbusIP command: " << ba <<"\n\r" ;
     }
 
