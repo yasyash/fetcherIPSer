@@ -108,6 +108,7 @@ void qtelnet::send_text(qtelnet &tracker, const char *text, int len)
 {
     static char crlf[] = { '\r', '\n' };
     if (! tracker.connected ) return;
+    if (! tracker->telnet ) return;
     cout << "Sending: '" << text << "'\n";
     telnet_send(tracker.telnet, text, len);
     telnet_send(tracker.telnet, crlf, 2);

@@ -348,11 +348,10 @@ void Grimm::rand()
 
 void Grimm::detect()
 {
-if (!tracker->worker_running)
-{
-connected  = false;
-}
-
+    if ( (tracker) && (!tracker->worker_running) )
+    {
+        connected  = false;
+    }
 }
 
 void Grimm::displayError(QAbstractSocket::SocketError socketError)
@@ -471,9 +470,10 @@ callbackFunc = func;
 void Grimm::send_go()
 {
     QByteArray _go =  QByteArray("v");
-
+    
     //Grimm command for acqusition
-    qtelnet::send_text(*tracker,
-                       _go.toStdString().c_str(),
-                       _go.length());
+	if ((tracker) && (tracker->connected))
+        qtelnet::send_text(*tracker,
+                           _go.toStdString().c_str(),
+                           _go.length());
 }
