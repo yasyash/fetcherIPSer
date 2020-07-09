@@ -133,6 +133,11 @@ void ups_status::read_voltage()
     vars = get_data((char*)"SNMPv2-SMI::mib-2.33.1.3.3.1.3.1"); //Input voltage MIB
     if (vars)
     {
+        if (vars->type != ASN_INTEGER)
+        {
+            qDebug() << "UPS SNMP return not integer(return "<< (vars->type) <<") for voltage"<< "\n\r";
+            return;
+        }
         voltage = int(*vars->val.integer);
         measure->insert("Напряжение", voltage);
     }
